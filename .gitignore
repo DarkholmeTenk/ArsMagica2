@@ -30,6 +30,10 @@ version.properties
 /.project
 /.settings/
 /eclipse/
+/asm/
+/mods/
+/crash-reports/
+usernamecache.json
 /debug/
 *.lock
 /.metadata/
