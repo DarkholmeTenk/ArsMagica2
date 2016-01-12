@@ -1,16 +1,16 @@
 package am2.configuration;
 
+import java.io.File;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.potion.Potion;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import am2.LogHelper;
 import am2.api.math.AMVector2;
 import am2.particles.AMParticle;
 import am2.particles.ParticleController;
 import cpw.mods.fml.common.Loader;
-import net.minecraft.client.Minecraft;
-import net.minecraft.potion.Potion;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-
-import java.io.File;
 
 public class AMConfig extends Configuration{
 
@@ -176,7 +176,7 @@ public class AMConfig extends Configuration{
 	private int[] worldgenBlacklist;
 	private boolean enableWitchwoodForest;
 	private int witchwoodForestRarity;
-	
+
 	private boolean allowCreativeTargets;
 
 	private String[] appropriationBlockBlacklist;
@@ -230,6 +230,15 @@ public class AMConfig extends Configuration{
 	private boolean allowCompendiumUpdates;
 	private boolean allowVersionChecks;
 	private boolean canDryadsDespawn;
+
+	public static double xpMult = 1;
+	public static double burnoutMult = 1;
+	public static int maxBlue = 30;
+	public static int minGreen = 20;
+	public static int maxGreen = 50;
+	public static int minRed = 40;
+	public static float dimGainReturn = 0.005f;
+	public static double dimGainLossMult = 1;
 
 
 	public static final String DEFAULT_LANGUAGE = "en_US";
@@ -370,6 +379,15 @@ public class AMConfig extends Configuration{
 				count++;
 			}
 		}
+		String dCat = "dark modifications";
+		xpMult = get(dCat, "XP Multiplier", "1.0", "Multiplier to be applied to all xp gain").getDouble(1);
+		burnoutMult = get(dCat, "Burnout Multiplier", "1.0", "Multiplier to be applied to all burnout gain").getDouble(1);
+		maxBlue = get(dCat, "Max level for blue skill points", "30","").getInt(30);
+		minGreen = get(dCat, "Min level for green skill points", "20","").getInt(20);
+		maxGreen = get(dCat, "Max level for green skill points", "50","").getInt(50);
+		minRed = get(dCat, "Min level for red skill points", "40","").getInt(40);
+		dimGainReturn = (float) get(dCat, "Diminishing gains return rate", "0.005", "Rate at which your xp gains return to normal").getDouble(0.005);
+		dimGainLossMult = get(dCat, "Diminishing gains loss multiplier", "1", "Multiplier for how much your xp gains go down").getDouble(1);
 
 		initDirectProperties();
 
@@ -633,7 +651,7 @@ public class AMConfig extends Configuration{
 	}
 
 	public boolean showArmorUI(){
-		return this.showArmorUI;
+		return showArmorUI;
 	}
 
 	public boolean candlesAreRovingLights(){
@@ -641,19 +659,19 @@ public class AMConfig extends Configuration{
 	}
 
 	public int getEnderAffinityAbilityCooldown(){
-		return this.enderAffinityAbilityCooldown;
+		return enderAffinityAbilityCooldown;
 	}
 
 	public boolean getEnableWitchwoodForest(){
-		return this.enableWitchwoodForest;
+		return enableWitchwoodForest;
 	}
 
 	public int getWitchwoodForestRarity(){
-		return this.witchwoodForestRarity;
+		return witchwoodForestRarity;
 	}
 
 	public boolean getAllowCreativeTargets(){
-		return this.allowCreativeTargets;
+		return allowCreativeTargets;
 	}
 
 	//====================================================================================
@@ -795,8 +813,8 @@ public class AMConfig extends Configuration{
 	public int getConfigurablePotionID(String id, int default_value){
 		// because we auto-configure, default_value is ignored
 		int val = getNextFreePotionID();
-		
-		if(val == -1 && !hasKey(CATEGORY_POTIONS, id)){
+
+		if((val == -1) && !hasKey(CATEGORY_POTIONS, id)){
 			LogHelper.error("Cannot find a free potion ID for the %s effect. This will cause severe problems!", id);
 			LogHelper.error("Effect %s has been assigned to a default of potion ID 1 (movement speed). Erroneous behaviour *will* result.", id);
 			val = 1;
@@ -818,7 +836,7 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraType, 15);
 		prop.set(index);
 
-		this.AuraType = index;
+		AuraType = index;
 	}
 
 	public void setAuraBehaviour(int index){
@@ -829,21 +847,21 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraBehaviour, 0);
 		prop.set(index);
 
-		this.AuraBehaviour = index;
+		AuraBehaviour = index;
 	}
 
 	public void setAuraColorRandom(boolean value){
 		Property prop = get(CATEGORY_BETA, KEY_AuraColorRandomize, false);
 		prop.set(value);
 
-		this.AuraRandomColor = value;
+		AuraRandomColor = value;
 	}
 
 	public void setAuraColorDefault(boolean value){
 		Property prop = get(CATEGORY_BETA, KEY_AuraColorDefault, true);
 		prop.set(value);
 
-		this.AuraDefaultColor = value;
+		AuraDefaultColor = value;
 	}
 
 	public void setAuraScale(float scale){
@@ -852,14 +870,14 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraScale, 50D);
 		prop.set(scale);
 
-		this.AuraScale = scale;
+		AuraScale = scale;
 	}
 
 	public void setAuraColor(int color){
 		Property prop = get(CATEGORY_BETA, KEY_AuraColor, 0xFFFFFF);
 		prop.set(color);
 
-		this.AuraColor = color;
+		AuraColor = color;
 	}
 
 	public void setAuraAlpha(float alpha){
@@ -868,7 +886,7 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraAlpha, 255D);
 		prop.set(alpha);
 
-		this.AuraAlpha = alpha;
+		AuraAlpha = alpha;
 	}
 
 	public void setAuraQuantity(int quantity){
@@ -877,7 +895,7 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraAlpha, 2);
 		prop.set(quantity);
 
-		this.AuraQuantity = quantity;
+		AuraQuantity = quantity;
 	}
 
 	public void setAuraDelay(int delay){
@@ -887,7 +905,7 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraDelay, 5);
 		prop.set(delay);
 
-		this.AuraDelay = delay;
+		AuraDelay = delay;
 	}
 
 	public void setAuraSpeed(float speed){
@@ -897,7 +915,7 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_BETA, KEY_AuraSpeed, 0.02f);
 		prop.set(speed);
 
-		this.AuraSpeed = speed;
+		AuraSpeed = speed;
 	}
 
 	public void setDisplayManaInInventory(boolean value){
@@ -905,14 +923,14 @@ public class AMConfig extends Configuration{
 		Property prop = get(CATEGORY_GENERAL, KEY_DisplayManaInInventory, def, "This will toggle mana display on and off in your inventory.  Default 'O' key in game.");
 		prop.set(value);
 
-		this.DisplayManaInInventory = value;
+		DisplayManaInInventory = value;
 	}
 
 	public void disableRetroactiveWorldgen(){
 		Property prop = get(CATEGORY_GENERAL, KEY_RetroactiveWorldGen, false, "Set this to true to enable retroactive worldgen for Ars Magica structures and ores.  *WARNING* This may break your save!  Do a backup first!");
 		prop.set(false);
 
-		this.RetroWorldGen = false;
+		RetroWorldGen = false;
 	}
 
 	public void setGuiPositions(AMVector2 manaHud, AMVector2 burnoutHud, AMVector2 levelHud, AMVector2 affinityHud, AMVector2 posBuffsHud, AMVector2 negBuffsHud, AMVector2 armorHead, AMVector2 armorChest, AMVector2 armorLegs, AMVector2 armorBoots, AMVector2 xpBar, AMVector2 contingency, AMVector2 manaNumeric, AMVector2 burnoutNumeric, AMVector2 XPNumeric, AMVector2 spellBookPos, boolean showBuffs, boolean showNumerics, boolean minimalHud, boolean showArmorUI, boolean showXPAlways, boolean showHudBars){
@@ -934,7 +952,7 @@ public class AMConfig extends Configuration{
 		SpellBookPosition = spellBookPos;
 		this.showBuffs = showBuffs;
 		this.showNumerics = showNumerics;
-		this.showHudMinimally = minimalHud;
+		showHudMinimally = minimalHud;
 		this.showArmorUI = showArmorUI;
 		this.showXPAlways = showXPAlways;
 		this.showHudBars = showHudBars;
@@ -986,7 +1004,7 @@ public class AMConfig extends Configuration{
 	}
 
 	public void setSkillTreeSecondaryTierCap(int skillTreeLock){
-		this.secondarySkillTreeTierCap = skillTreeLock;
+		secondarySkillTreeTierCap = skillTreeLock;
 	}
 
 	private void updateAMVector2(String keyX, String keyY, AMVector2 value){
@@ -999,6 +1017,6 @@ public class AMConfig extends Configuration{
 	}
 
 	public void setManaCap(double cap){
-		this.manaCap = cap;
+		manaCap = cap;
 	}
 }

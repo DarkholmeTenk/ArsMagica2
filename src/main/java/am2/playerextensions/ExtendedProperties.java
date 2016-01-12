@@ -1,5 +1,18 @@
 package am2.playerextensions;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.world.World;
+import net.minecraftforge.common.IExtendedEntityProperties;
+import net.minecraftforge.common.MinecraftForge;
 import am2.AMCore;
 import am2.api.ArsMagicaApi;
 import am2.api.IExtendedProperties;
@@ -14,6 +27,7 @@ import am2.armor.infusions.GenericImbuement;
 import am2.armor.infusions.ImbuementRegistry;
 import am2.bosses.EntityLifeGuardian;
 import am2.buffs.BuffList;
+import am2.configuration.AMConfig;
 import am2.guis.AMGuiHelper;
 import am2.items.ItemsCommonProxy;
 import am2.network.AMDataReader;
@@ -24,19 +38,6 @@ import am2.particles.AMLineArc;
 import am2.spell.SkillManager;
 import am2.spell.SkillTreeManager;
 import am2.spell.SpellHelper;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.world.World;
-import net.minecraftforge.common.IExtendedEntityProperties;
-import net.minecraftforge.common.MinecraftForge;
-
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class ExtendedProperties implements IExtendedProperties, IExtendedEntityProperties{
 	private EntityLivingBase entity;
@@ -159,7 +160,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	// Getters
 	//=======================================================================================
 	public boolean getHasDoneFullSync(){
-		return this.hasDoneFullSync;
+		return hasDoneFullSync;
 	}
 
 	@Override
@@ -171,12 +172,12 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public int getBreathAmount(){
-		return this.previousBreath;
+		return previousBreath;
 	}
 
 	@Override
 	public int getNumSummons(){
-		return this.numSummons;
+		return numSummons;
 	}
 
 	@Override
@@ -186,7 +187,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	@Override
 	public boolean getMarkSet(){
-		return (this.bitFlag & BIT_MARK_SET) == BIT_MARK_SET;
+		return (bitFlag & BIT_MARK_SET) == BIT_MARK_SET;
 	}
 
 	public int getAuraBehaviour(){
@@ -230,11 +231,11 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public ContingencyTypes getContingencyType(){
-		return this.contingencyType;
+		return contingencyType;
 	}
 
 	public ItemStack getContingencyEffect(){
-		return this.contingencyStack;
+		return contingencyStack;
 	}
 
 	public int getFallProtection(){
@@ -243,40 +244,40 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	@Override
 	public int getMarkDimension(){
-		return this.markDimension;
+		return markDimension;
 	}
 
 	public double getMarkX(){
-		return this.markX;
+		return markX;
 	}
 
 	public double getMarkY(){
-		return this.markY;
+		return markY;
 	}
 
 	public double getMarkZ(){
-		return this.markZ;
+		return markZ;
 	}
 
 	public float getCurrentFatigue(){
-		return this.currentFatigue;
+		return currentFatigue;
 	}
 
 	public float getMaxFatigue(){
-		return (float)(this.maxFatigue + this.entity.getAttributeMap().getAttributeInstance(ArsMagicaApi.maxBurnoutBonus).getAttributeValue());
+		return (float)(maxFatigue + entity.getAttributeMap().getAttributeInstance(ArsMagicaApi.maxBurnoutBonus).getAttributeValue());
 	}
 
 	@Override
 	public float getCurrentMana(){
-		return this.currentMana;
+		return currentMana;
 	}
 
 	@Override
 	public float getMaxMana(){
-		float max = this.maxMana;
-		if (this.entity.isPotionActive(BuffList.manaBoost))
-			max *= 1 + (0.25 * (this.entity.getActivePotionEffect(BuffList.manaBoost).getAmplifier() + 1));
-		return (float)(max + this.entity.getAttributeMap().getAttributeInstance(ArsMagicaApi.maxManaBonus).getAttributeValue());
+		float max = maxMana;
+		if (entity.isPotionActive(BuffList.manaBoost))
+			max *= 1 + (0.25 * (entity.getActivePotionEffect(BuffList.manaBoost).getAmplifier() + 1));
+		return (float)(max + entity.getAttributeMap().getAttributeInstance(ArsMagicaApi.maxManaBonus).getAttributeValue());
 	}
 
 	public void setMaxMana(float maxMana){
@@ -285,74 +286,74 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		}else{
 			this.maxMana = maxMana;
 		}
-		this.setUpdateFlag(UPD_MAX_MANA_FATIGUE);
+		setUpdateFlag(UPD_MAX_MANA_FATIGUE);
 	}
 
 	public byte[] getUpdateData(){
 		AMDataWriter writer = new AMDataWriter();
-		writer.add(this.entity.getEntityId());
-		writer.add(this.updateFlags);
+		writer.add(entity.getEntityId());
+		writer.add(updateFlags);
 
-		if ((this.updateFlags & UPD_BITFLAG) == UPD_BITFLAG){
-			writer.add(this.bitFlag);
+		if ((updateFlags & UPD_BITFLAG) == UPD_BITFLAG){
+			writer.add(bitFlag);
 		}
-		if ((this.updateFlags & UPD_CURRENT_MANA_FATIGUE) == UPD_CURRENT_MANA_FATIGUE){
-			writer.add(this.currentMana);
-			writer.add(this.currentFatigue);
+		if ((updateFlags & UPD_CURRENT_MANA_FATIGUE) == UPD_CURRENT_MANA_FATIGUE){
+			writer.add(currentMana);
+			writer.add(currentFatigue);
 		}
-		if ((this.updateFlags & UPD_MAGIC_LEVEL) == UPD_MAGIC_LEVEL){
-			writer.add(this.magicLevel);
-			writer.add(this.magicXP);
+		if ((updateFlags & UPD_MAGIC_LEVEL) == UPD_MAGIC_LEVEL){
+			writer.add(magicLevel);
+			writer.add(magicXP);
 		}
-		if ((this.updateFlags & UPD_MARK) == UPD_MARK){
-			writer.add(this.markX);
-			writer.add(this.markY);
-			writer.add(this.markZ);
-			writer.add(this.markDimension);
-			writer.add(this.getMarkSet());
+		if ((updateFlags & UPD_MARK) == UPD_MARK){
+			writer.add(markX);
+			writer.add(markY);
+			writer.add(markZ);
+			writer.add(markDimension);
+			writer.add(getMarkSet());
 		}
-		if ((this.updateFlags & UPD_MAX_MANA_FATIGUE) == UPD_MAX_MANA_FATIGUE){
-			writer.add(this.maxMana);
-			writer.add(this.maxFatigue);
+		if ((updateFlags & UPD_MAX_MANA_FATIGUE) == UPD_MAX_MANA_FATIGUE){
+			writer.add(maxMana);
+			writer.add(maxFatigue);
 		}
-		if ((this.updateFlags & UPD_NUM_SUMMONS) == UPD_NUM_SUMMONS){
-			writer.add(this.numSummons);
+		if ((updateFlags & UPD_NUM_SUMMONS) == UPD_NUM_SUMMONS){
+			writer.add(numSummons);
 		}
-		if ((this.updateFlags & UPD_BETA_PARTICLES) == UPD_BETA_PARTICLES && entity instanceof EntityPlayer && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
-			writer.add(this.getAuraIndex());
-			writer.add(this.getAuraBehaviour());
-			writer.add(this.getAuraScale());
-			writer.add(this.getAuraAlpha());
-			writer.add(this.getAuraColorRandomize());
-			writer.add(this.getAuraColorDefault());
-			writer.add(this.getAuraColor());
-			writer.add(this.getAuraDelay());
-			writer.add(this.getAuraQuantity());
-			writer.add(this.getAuraSpeed());
+		if (((updateFlags & UPD_BETA_PARTICLES) == UPD_BETA_PARTICLES) && (entity instanceof EntityPlayer) && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
+			writer.add(getAuraIndex());
+			writer.add(getAuraBehaviour());
+			writer.add(getAuraScale());
+			writer.add(getAuraAlpha());
+			writer.add(getAuraColorRandomize());
+			writer.add(getAuraColorDefault());
+			writer.add(getAuraColor());
+			writer.add(getAuraDelay());
+			writer.add(getAuraQuantity());
+			writer.add(getAuraSpeed());
 		}
-		if ((this.updateFlags & UPD_CONTINGENCY) == UPD_CONTINGENCY){
-			writer.add(this.contingencyType.ordinal());
-			if (this.contingencyType != ContingencyTypes.NONE){
-				writer.add(this.contingencyStack);
+		if ((updateFlags & UPD_CONTINGENCY) == UPD_CONTINGENCY){
+			writer.add(contingencyType.ordinal());
+			if (contingencyType != ContingencyTypes.NONE){
+				writer.add(contingencyStack);
 			}
 		}
-		if ((this.updateFlags & UPD_MANALINK) == UPD_MANALINK){
-			writer.add(this.manaLinks.size());
-			for (ManaLinkEntry entry : this.manaLinks)
+		if ((updateFlags & UPD_MANALINK) == UPD_MANALINK){
+			writer.add(manaLinks.size());
+			for (ManaLinkEntry entry : manaLinks)
 				writer.add(entry.entityID);
 		}
-		if ((this.updateFlags & UPD_DISABLE_GRAVITY) == UPD_DISABLE_GRAVITY){
-			writer.add(this.disableGravity);
+		if ((updateFlags & UPD_DISABLE_GRAVITY) == UPD_DISABLE_GRAVITY){
+			writer.add(disableGravity);
 		}
 
-		this.updateFlags = 0;
-		this.forcingSync = false;
+		updateFlags = 0;
+		forcingSync = false;
 		return writer.generate();
 	}
 
 	@Override
 	public int getMagicLevel(){
-		return this.magicLevel;
+		return magicLevel;
 	}
 
 	public float getXPToNextLevel(){
@@ -360,20 +361,20 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public float getMagicXP(){
-		return this.magicXP;
+		return magicXP;
 	}
 
 	public Entity getInanimateTarget(){
-		return this.inanimateTarget;
+		return inanimateTarget;
 	}
 
 	public boolean getHasUpdate(){
-		if (!(this.entity instanceof EntityPlayer) && !forcingSync){
+		if (!(entity instanceof EntityPlayer) && !forcingSync){
 			return false;
 		}
-		this.ticksToSync--;
-		if (this.ticksToSync <= 0) this.ticksToSync = this.syncTickDelay;
-		return this.updateFlags != 0 && this.ticksToSync == this.syncTickDelay;
+		ticksToSync--;
+		if (ticksToSync <= 0) ticksToSync = syncTickDelay;
+		return (updateFlags != 0) && (ticksToSync == syncTickDelay);
 	}
 
 	public boolean getCanHaveMoreSummons(){
@@ -382,12 +383,12 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 			return true;
 
 		int maxSummons = 1;
-		if (entity instanceof EntityPlayer && SkillData.For((EntityPlayer)entity).isEntryKnown(SkillTreeManager.instance.getSkillTreeEntry(SkillManager.instance.getSkill("ExtraSummon"))))
+		if ((entity instanceof EntityPlayer) && SkillData.For((EntityPlayer)entity).isEntryKnown(SkillTreeManager.instance.getSkillTreeEntry(SkillManager.instance.getSkill("ExtraSummon"))))
 			maxSummons++;
 
 		verifySummons();
 
-		return this.numSummons < maxSummons;
+		return numSummons < maxSummons;
 	}
 
 	public boolean getIsFlipped(){
@@ -399,32 +400,32 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public float getFlipRotation(){
-		return this.flipRotation;
+		return flipRotation;
 	}
 
 	public float getPrevFlipRotation(){
-		return this.prevFlipRotation;
+		return prevFlipRotation;
 	}
 
 	public float getShrinkPct(){
-		return this.shrinkPct;
+		return shrinkPct;
 	}
 
 	public float getPrevShrinkPct(){
-		return this.prevShrinkPct;
+		return prevShrinkPct;
 	}
 
 	public void setShrinkPct(float pct){
-		this.prevShrinkPct = this.shrinkPct;
-		this.shrinkPct = pct;
+		prevShrinkPct = shrinkPct;
+		shrinkPct = pct;
 	}
 
 	public boolean shouldReverseInput(){
-		return getFlipRotation() > 0 || this.entity.isPotionActive(BuffList.scrambleSynapses.id);
+		return (getFlipRotation() > 0) || entity.isPotionActive(BuffList.scrambleSynapses.id);
 	}
 
 	public AMVector2 getOriginalSize(){
-		return this.originalSize;
+		return originalSize;
 	}
 
 	public boolean getCanHeal(){
@@ -449,7 +450,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public void setBreathAmount(int breath){
-		this.previousBreath = breath;
+		previousBreath = breath;
 	}
 
 	@Override
@@ -458,10 +459,10 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		if (level > maxMagicLevel) level = maxMagicLevel;
 		if (level < 0) level = 0;
 		setMagicLevel(level);
-		setMaxMana((float)(Math.pow(level, 1.5f) * (85f * ((float)level / maxMagicLevel)) + 500f));
+		setMaxMana((float)((Math.pow(level, 1.5f) * (85f * ((float)level / maxMagicLevel))) + 500f));
 		setCurrentMana(getMaxMana());
 		setCurrentFatigue(0);
-		setMaxFatigue(level * 10 + 1);
+		setMaxFatigue((level * 10) + 1);
 
 		return true;
 	}
@@ -469,7 +470,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	public void setInanimateTarget(Entity ent){
 		if (ent instanceof EntityLivingBase)
 			return;
-		this.inanimateTarget = ent;
+		inanimateTarget = ent;
 	}
 
 	public void setMarkY(double markY){
@@ -484,12 +485,12 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		if (currentFatigue < 0) currentFatigue = 0;
 		if (currentFatigue > getMaxFatigue()) currentFatigue = getMaxFatigue();
 		this.currentFatigue = currentFatigue;
-		this.setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
+		setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
 	}
 
 	public void setMaxFatigue(float maxFatigue){
 		this.maxFatigue = maxFatigue;
-		this.setUpdateFlag(UPD_MAX_MANA_FATIGUE);
+		setUpdateFlag(UPD_MAX_MANA_FATIGUE);
 	}
 
 	@Override
@@ -497,7 +498,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		if (currentMana < 0) currentMana = 0;
 		if (currentMana > getMaxMana()) currentMana = getMaxMana();
 		this.currentMana = currentMana;
-		this.setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
+		setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
 	}
 
 	public void setMagicLevel(int magicLevel){
@@ -510,47 +511,47 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		ticksForFullRegen = (int)Math.round(baseTicksForFullRegen * (0.75 - (0.25 * (getMagicLevel() / maxMagicLevel))));
 
 		this.magicLevel = magicLevel;
-		this.setUpdateFlag(UPD_MAGIC_LEVEL);
+		setUpdateFlag(UPD_MAGIC_LEVEL);
 	}
 
 	public void setFallProtection(int protection){
-		this.fallProtection = protection;
+		fallProtection = protection;
 	}
 
 	public void setContingency(ContingencyTypes type, ItemStack effect){
-		this.contingencyType = type;
-		this.contingencyStack = effect;
-		this.setUpdateFlag(UPD_CONTINGENCY);
+		contingencyType = type;
+		contingencyStack = effect;
+		setUpdateFlag(UPD_CONTINGENCY);
 	}
 
 	public void setFullSync(){
-		this.ticksToSync = 0;
-		this.setUpdateFlag(UPD_CONTINGENCY);
-		this.setUpdateFlag(UPD_BITFLAG);
-		this.setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
-		this.setUpdateFlag(UPD_MAGIC_LEVEL);
-		this.setUpdateFlag(UPD_MARK);
-		this.setUpdateFlag(UPD_MAX_MANA_FATIGUE);
-		this.setUpdateFlag(UPD_NUM_SUMMONS);
-		this.setUpdateFlag(UPD_BETA_PARTICLES);
-		this.hasDoneFullSync = true;
-		this.forcingSync = true;
+		ticksToSync = 0;
+		setUpdateFlag(UPD_CONTINGENCY);
+		setUpdateFlag(UPD_BITFLAG);
+		setUpdateFlag(UPD_CURRENT_MANA_FATIGUE);
+		setUpdateFlag(UPD_MAGIC_LEVEL);
+		setUpdateFlag(UPD_MARK);
+		setUpdateFlag(UPD_MAX_MANA_FATIGUE);
+		setUpdateFlag(UPD_NUM_SUMMONS);
+		setUpdateFlag(UPD_BETA_PARTICLES);
+		hasDoneFullSync = true;
+		forcingSync = true;
 	}
 
 	public void updateManaLink(EntityLivingBase entity){
 		if (!entity.worldObj.isRemote){
-			this.updateFlags |= UPD_MANALINK;
+			updateFlags |= UPD_MANALINK;
 		}
 		ManaLinkEntry mle = new ManaLinkEntry(entity.getEntityId(), 20);
-		if (!this.manaLinks.contains(mle))
-			this.manaLinks.add(mle);
+		if (!manaLinks.contains(mle))
+			manaLinks.add(mle);
 		else
-			this.manaLinks.remove(mle);
+			manaLinks.remove(mle);
 	}
 
 	public float getBonusCurrentMana(){
 		float bonus = 0;
-		for (ManaLinkEntry entry : this.manaLinks){
+		for (ManaLinkEntry entry : manaLinks){
 			bonus += entry.getAdditionalCurrentMana(entity.worldObj, entity);
 		}
 		return bonus;
@@ -558,7 +559,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public float getBonusMaxMana(){
 		float bonus = 0;
-		for (ManaLinkEntry entry : this.manaLinks){
+		for (ManaLinkEntry entry : manaLinks){
 			bonus += entry.getAdditionalMaxMana(entity.worldObj, entity);
 		}
 		return bonus;
@@ -566,54 +567,54 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public void setIsFlipped(boolean flipped){
 		if (flipped)
-			this.bitFlag |= BIT_FLIPPED;
+			bitFlag |= BIT_FLIPPED;
 		else
-			this.bitFlag &= ~BIT_FLIPPED;
+			bitFlag &= ~BIT_FLIPPED;
 
 		if (!entity.worldObj.isRemote)
-			this.setUpdateFlag(UPD_BITFLAG);
+			setUpdateFlag(UPD_BITFLAG);
 	}
 
 	public void setIsShrunk(boolean shrunk){
 		if (shrunk)
-			this.bitFlag |= BIT_SHRUNK;
+			bitFlag |= BIT_SHRUNK;
 		else
-			this.bitFlag &= ~BIT_SHRUNK;
+			bitFlag &= ~BIT_SHRUNK;
 
 		if (!entity.worldObj.isRemote){
-			this.setUpdateFlag(UPD_BITFLAG);
-			this.forceSync();
+			setUpdateFlag(UPD_BITFLAG);
+			forceSync();
 		}
 	}
 
 	public void setDisableGravity(boolean disabled){
-		this.disableGravity = disabled;
-		if (!this.entity.worldObj.isRemote){
-			this.setUpdateFlag(UPD_DISABLE_GRAVITY);
-			this.forceSync();
+		disableGravity = disabled;
+		if (!entity.worldObj.isRemote){
+			setUpdateFlag(UPD_DISABLE_GRAVITY);
+			forceSync();
 		}
 	}
 
 	public void setOriginalSize(AMVector2 size){
-		this.originalSize = size;
+		originalSize = size;
 	}
 
 	public void setHealCooldown(int length){
-		this.healCooldown = length;
+		healCooldown = length;
 	}
 	//=======================================================================================
 	// Private Setters
 	//=======================================================================================
 
 	private void setMarkSet(boolean markSet){
-		byte curValue = this.bitFlag;
+		byte curValue = bitFlag;
 		if (markSet){
 			curValue |= BIT_MARK_SET;
 		}else{
 			curValue &= ~BIT_MARK_SET;
 		}
-		this.bitFlag = curValue;
-		this.setUpdateFlag(UPD_BITFLAG);
+		bitFlag = curValue;
+		setUpdateFlag(UPD_BITFLAG);
 	}
 
 	private void setMarkDimension(int markDimension){
@@ -625,18 +626,18 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	private void setNumSummons(int numSummons){
-		if (this.entity == null || this.entity.worldObj == null){
+		if ((entity == null) || (entity.worldObj == null)){
 			return;
 		}
 		this.numSummons = numSummons;
 	}
 
 	private void setUpdateFlag(int flag){
-		this.updateFlags |= flag;
+		updateFlags |= flag;
 	}
 
 	private void clearUpdateFlag(int flag){
-		this.updateFlags &= ~flag;
+		updateFlags &= ~flag;
 	}
 
 	//=======================================================================================
@@ -657,21 +658,21 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 		if (isCritical){
 			if (armorProcCooldowns[3] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 3, armorProcCooldowns[3]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 3, armorProcCooldowns[3]);
 			}
 			if (armorProcCooldowns[1] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 1, armorProcCooldowns[1]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 1, armorProcCooldowns[1]);
 			}
 			if (armorProcCooldowns[2] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 2, armorProcCooldowns[2]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 2, armorProcCooldowns[2]);
 			}
 			if (armorProcCooldowns[0] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 0, armorProcCooldowns[0]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 0, armorProcCooldowns[0]);
 			}
 		}
 
-		if (entity.worldObj != null && entity.worldObj.isRemote && entity instanceof EntityPlayer && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
-			EntityLivingBase localPlayer = AMCore.instance.proxy.getLocalPlayer();
+		if ((entity.worldObj != null) && entity.worldObj.isRemote && (entity instanceof EntityPlayer) && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
+			EntityLivingBase localPlayer = AMCore.proxy.getLocalPlayer();
 			if (entity != localPlayer)
 				AMNetHandler.INSTANCE.requestAuras((EntityPlayer)entity);
 		}
@@ -679,19 +680,19 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public void handleSpecialSyncData(){
-		if (needsArmorTickCounterSync && entity instanceof EntityPlayerMP){
+		if (needsArmorTickCounterSync && (entity instanceof EntityPlayerMP)){
 			needsArmorTickCounterSync = false;
 			if (armorProcCooldowns[3] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 3, armorProcCooldowns[3]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 3, armorProcCooldowns[3]);
 			}
 			if (armorProcCooldowns[1] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 1, armorProcCooldowns[1]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 1, armorProcCooldowns[1]);
 			}
 			if (armorProcCooldowns[2] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 2, armorProcCooldowns[2]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 2, armorProcCooldowns[2]);
 			}
 			if (armorProcCooldowns[0] > 0){
-				AMCore.instance.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 0, armorProcCooldowns[0]);
+				AMCore.proxy.blackoutArmorPiece((EntityPlayerMP)entity, 0, armorProcCooldowns[0]);
 			}
 		}
 	}
@@ -700,7 +701,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		for (int i = 0; i < summon_ent_ids.size(); ++i){
 			int id = summon_ent_ids.get(i);
 			Entity e = entity.worldObj.getEntityByID(id);
-			if (e == null || !(e instanceof EntityLivingBase)){
+			if ((e == null) || !(e instanceof EntityLivingBase)){
 				summon_ent_ids.remove(i);
 				i--;
 				removeSummon();
@@ -729,77 +730,77 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	}
 
 	public void setSyncAuras(){
-		if (entity instanceof EntityPlayer && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity))
-			this.setUpdateFlag(UPD_BETA_PARTICLES);
+		if ((entity instanceof EntityPlayer) && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity))
+			setUpdateFlag(UPD_BETA_PARTICLES);
 	}
 
 	public boolean handleDataPacket(byte[] data){
 		AMDataReader rdr = new AMDataReader(data, false);
 		int entID = rdr.getInt();
 
-		if (entID != this.entity.getEntityId()){
+		if (entID != entity.getEntityId()){
 			return false;
 		}
 		int flags = rdr.getInt();
 
 		if ((flags & UPD_BITFLAG) == UPD_BITFLAG){
-			this.bitFlag = rdr.getByte();
+			bitFlag = rdr.getByte();
 		}
 		if ((flags & UPD_CURRENT_MANA_FATIGUE) == UPD_CURRENT_MANA_FATIGUE){
-			this.currentMana = rdr.getFloat();
-			this.currentFatigue = rdr.getFloat();
+			currentMana = rdr.getFloat();
+			currentFatigue = rdr.getFloat();
 		}
 		if ((flags & UPD_MAGIC_LEVEL) == UPD_MAGIC_LEVEL){
-			this.magicLevel = rdr.getInt();
+			magicLevel = rdr.getInt();
 			float newMagicXP = rdr.getFloat();
-			if (entity.worldObj.isRemote && newMagicXP != magicXP){
+			if (entity.worldObj.isRemote && (newMagicXP != magicXP)){
 				AMGuiHelper.instance.showMagicXPBar();
 			}
-			this.magicXP = newMagicXP;
+			magicXP = newMagicXP;
 		}
 		if ((flags & UPD_MARK) == UPD_MARK){
-			this.markX = rdr.getDouble();
-			this.markY = rdr.getDouble();
-			this.markZ = rdr.getDouble();
-			this.markDimension = rdr.getInt();
-			this.setMarkSet(rdr.getBoolean());
+			markX = rdr.getDouble();
+			markY = rdr.getDouble();
+			markZ = rdr.getDouble();
+			markDimension = rdr.getInt();
+			setMarkSet(rdr.getBoolean());
 		}
 		if ((flags & UPD_MAX_MANA_FATIGUE) == UPD_MAX_MANA_FATIGUE){
-			this.maxMana = rdr.getFloat();
-			this.maxFatigue = rdr.getFloat();
+			maxMana = rdr.getFloat();
+			maxFatigue = rdr.getFloat();
 		}
 		if ((flags & UPD_NUM_SUMMONS) == UPD_NUM_SUMMONS){
-			this.numSummons = rdr.getInt();
+			numSummons = rdr.getInt();
 		}
-		if ((flags & UPD_BETA_PARTICLES) == UPD_BETA_PARTICLES && entity instanceof EntityPlayer && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
-			this.AuraIndex = rdr.getInt();
-			this.AuraBehaviour = rdr.getInt();
-			this.AuraScale = rdr.getFloat();
-			this.AuraAlpha = rdr.getFloat();
-			this.AuraColorRandomize = rdr.getBoolean();
-			this.AuraColorDefault = rdr.getBoolean();
-			this.AuraColor = rdr.getInt();
-			this.AuraDelay = rdr.getInt();
-			this.AuraQuantity = rdr.getInt();
-			this.AuraSpeed = rdr.getFloat();
+		if (((flags & UPD_BETA_PARTICLES) == UPD_BETA_PARTICLES) && (entity instanceof EntityPlayer) && AMCore.proxy.playerTracker.hasAA((EntityPlayer)entity)){
+			AuraIndex = rdr.getInt();
+			AuraBehaviour = rdr.getInt();
+			AuraScale = rdr.getFloat();
+			AuraAlpha = rdr.getFloat();
+			AuraColorRandomize = rdr.getBoolean();
+			AuraColorDefault = rdr.getBoolean();
+			AuraColor = rdr.getInt();
+			AuraDelay = rdr.getInt();
+			AuraQuantity = rdr.getInt();
+			AuraSpeed = rdr.getFloat();
 		}
 		if ((flags & UPD_CONTINGENCY) == UPD_CONTINGENCY){
-			this.contingencyType = ContingencyTypes.values()[rdr.getInt()];
-			if (this.contingencyType != ContingencyTypes.NONE){
-				this.contingencyStack = rdr.getItemStack();
+			contingencyType = ContingencyTypes.values()[rdr.getInt()];
+			if (contingencyType != ContingencyTypes.NONE){
+				contingencyStack = rdr.getItemStack();
 			}
 		}
 		if ((flags & UPD_MANALINK) == UPD_MANALINK){
-			this.manaLinks.clear();
+			manaLinks.clear();
 			int numLinks = rdr.getInt();
 			for (int i = 0; i < numLinks; ++i){
 				Entity e = entity.worldObj.getEntityByID(rdr.getInt());
-				if (e != null && e instanceof EntityLivingBase)
+				if ((e != null) && (e instanceof EntityLivingBase))
 					updateManaLink((EntityLivingBase)e);
 			}
 		}
 		if ((flags & UPD_DISABLE_GRAVITY) == UPD_DISABLE_GRAVITY){
-			this.disableGravity = rdr.getBoolean();
+			disableGravity = rdr.getBoolean();
 		}
 
 		return true;
@@ -807,64 +808,64 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public void setDelayedSync(int delay){
 		setFullSync();
-		this.ticksToSync = delay;
+		ticksToSync = delay;
 	}
 
 	public void forceSync(){
-		this.ticksToSync = 0;
-		this.forcingSync = true;
+		ticksToSync = 0;
+		forcingSync = true;
 	}
 
 	public void updateAuraData(int index, int behaviour, float scale, float alpha, boolean colorRandom, boolean colorDefault, int color, int delay, int quantity, float speed){
-		this.AuraIndex = index;
-		this.AuraBehaviour = behaviour;
-		this.AuraScale = scale;
-		this.AuraAlpha = alpha;
-		this.AuraColorRandomize = colorRandom;
-		this.AuraColorDefault = colorDefault;
-		this.AuraColor = color;
-		this.AuraDelay = delay;
-		this.AuraQuantity = quantity;
-		this.AuraSpeed = speed;
+		AuraIndex = index;
+		AuraBehaviour = behaviour;
+		AuraScale = scale;
+		AuraAlpha = alpha;
+		AuraColorRandomize = colorRandom;
+		AuraColorDefault = colorDefault;
+		AuraColor = color;
+		AuraDelay = delay;
+		AuraQuantity = quantity;
+		AuraSpeed = speed;
 
-		this.setUpdateFlag(UPD_BETA_PARTICLES);
+		setUpdateFlag(UPD_BETA_PARTICLES);
 	}
 
 	public byte[] getAuraData(){
 		AMDataWriter writer = new AMDataWriter();
-		writer.add(this.AuraIndex);
-		writer.add(this.AuraBehaviour);
-		writer.add(this.AuraScale);
-		writer.add(this.AuraAlpha);
-		writer.add(this.AuraColorRandomize);
-		writer.add(this.AuraColorDefault);
-		writer.add(this.AuraColor);
-		writer.add(this.AuraDelay);
-		writer.add(this.AuraQuantity);
-		writer.add(this.AuraSpeed);
+		writer.add(AuraIndex);
+		writer.add(AuraBehaviour);
+		writer.add(AuraScale);
+		writer.add(AuraAlpha);
+		writer.add(AuraColorRandomize);
+		writer.add(AuraColorDefault);
+		writer.add(AuraColor);
+		writer.add(AuraDelay);
+		writer.add(AuraQuantity);
+		writer.add(AuraSpeed);
 
 		return writer.generate();
 	}
 
 	public void readAuraData(byte[] data){
 		AMDataReader rdr = new AMDataReader(data, false);
-		this.AuraIndex = rdr.getInt();
-		this.AuraBehaviour = rdr.getInt();
-		this.AuraScale = rdr.getFloat();
-		this.AuraAlpha = rdr.getFloat();
-		this.AuraColorRandomize = rdr.getBoolean();
-		this.AuraColorDefault = rdr.getBoolean();
-		this.AuraColor = rdr.getInt();
-		this.AuraDelay = rdr.getInt();
-		this.AuraQuantity = rdr.getInt();
-		this.AuraSpeed = rdr.getFloat();
+		AuraIndex = rdr.getInt();
+		AuraBehaviour = rdr.getInt();
+		AuraScale = rdr.getFloat();
+		AuraAlpha = rdr.getFloat();
+		AuraColorRandomize = rdr.getBoolean();
+		AuraColorDefault = rdr.getBoolean();
+		AuraColor = rdr.getInt();
+		AuraDelay = rdr.getInt();
+		AuraQuantity = rdr.getInt();
+		AuraSpeed = rdr.getFloat();
 	}
 
 	public void handleWaterMovement(){
-		if (this.entity.isPotionActive(BuffList.swiftSwim.id)){
-			this.entity.motionX *= 0.96;
-			this.entity.motionY *= 0.96;
-			this.entity.motionZ *= 0.96;
+		if (entity.isPotionActive(BuffList.swiftSwim.id)){
+			entity.motionX *= 0.96;
+			entity.motionY *= 0.96;
+			entity.motionZ *= 0.96;
 		}
 	}
 
@@ -881,7 +882,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 		compound.setIntArray("armorCooldowns", armorProcCooldowns);
 		//compound.setBoolean("isFlipped", this.getIsFlipped());
-		compound.setBoolean("isShrunk", this.getIsShrunk());
+		compound.setBoolean("isShrunk", getIsShrunk());
 
 		compound.setBoolean("isCritical", isCritical);
 
@@ -895,10 +896,10 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 		//mark location
 		if (getMarkSet()){
-			compound.setDouble("marklocationx", this.getMarkX());
-			compound.setDouble("marklocationy", this.getMarkY());
-			compound.setDouble("marklocationz", this.getMarkZ());
-			compound.setInteger("markdimension", this.getMarkDimension());
+			compound.setDouble("marklocationx", getMarkX());
+			compound.setDouble("marklocationy", getMarkY());
+			compound.setDouble("marklocationz", getMarkZ());
+			compound.setInteger("markdimension", getMarkDimension());
 		}
 	}
 
@@ -939,18 +940,18 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 			setMarkY(compound.getDouble("marklocationy"));
 			setMarkZ(compound.getDouble("marklocationz"));
 			setMarkDimension(compound.getInteger("markdimension"));
-			this.setMarkSet(true);
+			setMarkSet(true);
 		}
 
 		if (compound.hasKey("contingency_type")){
-			this.contingencyType = ContingencyTypes.values()[compound.getInteger("contingency_type")];
-			this.contingencyStack = ItemStack.loadItemStackFromNBT((NBTTagCompound)compound.getTag("contingency_effect"));
+			contingencyType = ContingencyTypes.values()[compound.getInteger("contingency_type")];
+			contingencyStack = ItemStack.loadItemStackFromNBT((NBTTagCompound)compound.getTag("contingency_effect"));
 		}
 	}
 
 	@Override
 	public void init(Entity entity, World world){
-		if (world == null || entity == null || !(entity instanceof EntityLivingBase)) return;
+		if ((world == null) || (entity == null) || !(entity instanceof EntityLivingBase)) return;
 
 		setEntityReference((EntityLivingBase)entity);
 
@@ -984,9 +985,9 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public void deductMana(float manaCost){
 		float leftOver = manaCost - currentMana;
-		this.setCurrentMana(currentMana - manaCost);
+		setCurrentMana(currentMana - manaCost);
 		if (leftOver > 0){
-			for (ManaLinkEntry entry : this.manaLinks){
+			for (ManaLinkEntry entry : manaLinks){
 				leftOver -= entry.deductMana(entity.worldObj, entity, leftOver);
 				if (leftOver <= 0)
 					break;
@@ -996,19 +997,19 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public void toggleFlipped(){
 		if (entity.worldObj.isRemote){
-			AMNetHandler.INSTANCE.sendExPropCommandToServer(this.BIT_FLIPPED);
+			AMNetHandler.INSTANCE.sendExPropCommandToServer(BIT_FLIPPED);
 		}
-		if (this.getIsFlipped())
-			this.setIsFlipped(false);
+		if (getIsFlipped())
+			setIsFlipped(false);
 		else
-			this.setIsFlipped(true);
+			setIsFlipped(true);
 	}
 
 	public void spawnManaLinkParticles(){
-		if (entity.worldObj != null && entity.worldObj.isRemote){
-			for (ManaLinkEntry entry : this.manaLinks){
+		if ((entity.worldObj != null) && entity.worldObj.isRemote){
+			for (ManaLinkEntry entry : manaLinks){
 				Entity e = entity.worldObj.getEntityByID(entry.entityID);
-				if (e != null && e.getDistanceSqToEntity(entity) < entry.range && e.ticksExisted % 90 == 0){
+				if ((e != null) && (e.getDistanceSqToEntity(entity) < entry.range) && ((e.ticksExisted % 90) == 0)){
 					AMLineArc arc = (AMLineArc)AMCore.proxy.particleManager.spawn(entity.worldObj, "textures/blocks/oreblockbluetopaz.png", e, entity);
 					if (arc != null){
 						arc.setIgnoreAge(false);
@@ -1022,9 +1023,10 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 	public void addBurnout(float burnout){
 		if (entity.isPotionActive(BuffList.burnoutReduction))
 			burnout *= 0.75f;
-		this.setCurrentFatigue(currentFatigue + burnout);
+		burnout *= AMConfig.burnoutMult;
+		setCurrentFatigue(currentFatigue + burnout);
 	}
-	
+
 	@Override
 	public String toString() {
 		try {
@@ -1033,19 +1035,19 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 			return hashCode() + " (error)";
 		}
 	}
-	
+
 	public void handleExtendedPropertySync(){
-		if (!entity.worldObj.isRemote && !this.getHasDoneFullSync()) {
-			this.setFullSync();
+		if (!entity.worldObj.isRemote && !getHasDoneFullSync()) {
+			setFullSync();
 		}
 
-		if (!entity.worldObj.isRemote && this.getHasUpdate()){
-			byte[] data = this.getUpdateData();
+		if (!entity.worldObj.isRemote && getHasUpdate()){
+			byte[] data = getUpdateData();
 			AMNetHandler.INSTANCE.sendPacketToAllClientsNear(entity.dimension, entity.posX, entity.posY, entity.posZ, 32, AMPacketIDs.SYNC_EXTENDED_PROPS, data);
 		}
 
 		if (entity.worldObj.isRemote){
-			if (this.detectPossibleDesync()){
+			if (detectPossibleDesync()){
 				AMNetHandler.INSTANCE.sendPacketToServer(AMPacketIDs.POSSIBLE_CLIENT_EXPROP_DESYNC, new AMDataWriter().add(entity.getEntityId()).generate());
 			}
 		}
@@ -1053,31 +1055,31 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 	public void syncTKDistance(){
 		AMDataWriter writer = new AMDataWriter();
-		writer.add(this.TK_Distance);
+		writer.add(TK_Distance);
 		AMNetHandler.INSTANCE.sendPacketToServer(AMPacketIDs.TK_DISTANCE_SYNC, writer.generate());
 	}
 
 	public void addMagicXP(float amt){
-		if (magicLevel == maxMagicLevel || !(this.entity instanceof EntityPlayer)) return;
+		if ((magicLevel == maxMagicLevel) || !(entity instanceof EntityPlayer)) return;
 
-		this.magicXP += amt;
+		magicXP += amt * AMConfig.xpMult;
 		float xpToLevel = getXPToNextLevel();
 		if (magicXP >= xpToLevel){
 			magicXP = 0;
 
 			setMagicLevelWithMana(magicLevel + 1);
 
-			if (this.entity instanceof EntityPlayer && magicLevel % 2 == 0){
-				EntityPlayer ent = (EntityPlayer)this.entity;
-				if (magicLevel <= 20)
+			if ((entity instanceof EntityPlayer) && ((magicLevel % 2) == 0)){
+				EntityPlayer ent = (EntityPlayer)entity;
+				if (magicLevel < AMConfig.maxBlue)
 					SkillData.For(ent).incrementSpellPoints(SkillPointTypes.BLUE);
-				else if (magicLevel <= 40)
+				if ((magicLevel >= AMConfig.minGreen) && (magicLevel < AMConfig.maxGreen))
 					SkillData.For(ent).incrementSpellPoints(SkillPointTypes.GREEN);
-				else if (magicLevel <= 50)
+				if (magicLevel >= AMConfig.minRed)
 					SkillData.For(ent).incrementSpellPoints(SkillPointTypes.RED);
 
 			}
-			this.entity.worldObj.playSoundAtEntity(entity, "arsmagica2:misc.event.magic_level_up", 1, 1);
+			entity.worldObj.playSoundAtEntity(entity, "arsmagica2:misc.event.magic_level_up", 1, 1);
 		}
 		setUpdateFlag(UPD_MAGIC_LEVEL);
 		forceSync();
@@ -1087,8 +1089,8 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		SpellHelper.instance.applyStackStage(contingencyStack, entity, entity, entity.posX, entity.posY, entity.posZ, 0, entity.worldObj, false, false, 0);
 		AMNetHandler.INSTANCE.sendSpellApplyEffectToAllAround(entity, entity, entity.posX, entity.posY, entity.posZ, entity.worldObj, contingencyStack);
 
-		this.setContingency(ContingencyTypes.NONE, null);
-		this.forceSync();
+		setContingency(ContingencyTypes.NONE, null);
+		forceSync();
 	}
 
 	public void manaBurnoutTick(){
@@ -1096,14 +1098,14 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		healCooldown--;
 
 		if (disableGravity){
-			this.entity.motionY = 0;
+			entity.motionY = 0;
 		}
 
 		if (ticksSinceLastRegen >= ticksToRegen){
 			//mana regeneration
 			float actualMaxMana = getMaxMana();
 			if (getCurrentMana() < actualMaxMana){
-				if (entity instanceof EntityPlayer && ((EntityPlayer)entity).capabilities.isCreativeMode){
+				if ((entity instanceof EntityPlayer) && ((EntityPlayer)entity).capabilities.isCreativeMode){
 					setCurrentMana(actualMaxMana);
 				}else{
 					if (getCurrentMana() < 0){
@@ -1182,21 +1184,21 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		boolean flipped = getIsFlipped();
 
 		ItemStack boots = ((EntityPlayer)entity).inventory.armorInventory[0];
-		if (boots == null || boots.getItem() != ItemsCommonProxy.enderBoots)
+		if ((boots == null) || (boots.getItem() != ItemsCommonProxy.enderBoots))
 			setIsFlipped(false);
 
 		prevFlipRotation = flipRotation;
-		if (flipped && flipRotation < 180)
+		if (flipped && (flipRotation < 180))
 			flipRotation += 15;
-		else if (!flipped && flipRotation > 0)
+		else if (!flipped && (flipRotation > 0))
 			flipRotation -= 15;
 	}
 
 	public void cleanupManaLinks(){
-		Iterator<ManaLinkEntry> it = this.manaLinks.iterator();
+		Iterator<ManaLinkEntry> it = manaLinks.iterator();
 		while (it.hasNext()){
 			ManaLinkEntry entry = it.next();
-			Entity e = this.entity.worldObj.getEntityByID(entry.entityID);
+			Entity e = entity.worldObj.getEntityByID(entry.entityID);
 			if (e == null)
 				it.remove();
 		}
@@ -1221,28 +1223,28 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 
 		private EntityLivingBase getEntity(World world){
 			Entity e = world.getEntityByID(entityID);
-			if (e == null || !(e instanceof EntityLivingBase))
+			if ((e == null) || !(e instanceof EntityLivingBase))
 				return null;
 			return (EntityLivingBase)e;
 		}
 
 		public float getAdditionalCurrentMana(World world, EntityLivingBase host){
 			EntityLivingBase e = getEntity(world);
-			if (e == null || e.getDistanceSqToEntity(host) > range)
+			if ((e == null) || (e.getDistanceSqToEntity(host) > range))
 				return 0;
 			return For(e).getCurrentMana();
 		}
 
 		public float getAdditionalMaxMana(World world, EntityLivingBase host){
 			EntityLivingBase e = getEntity(world);
-			if (e == null || e.getDistanceSqToEntity(host) > range)
+			if ((e == null) || (e.getDistanceSqToEntity(host) > range))
 				return 0;
 			return For(e).getMaxMana();
 		}
 
 		public float deductMana(World world, EntityLivingBase host, float amt){
 			EntityLivingBase e = getEntity(world);
-			if (e == null || e.getDistanceSqToEntity(host) > range)
+			if ((e == null) || (e.getDistanceSqToEntity(host) > range))
 				return 0;
 			amt = Math.min(For(e).getCurrentMana(), amt);
 			For(e).deductMana(amt);
@@ -1259,7 +1261,7 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		@Override
 		public boolean equals(Object obj){
 			if (obj instanceof ManaLinkEntry)
-				return ((ManaLinkEntry)obj).entityID == this.entityID;
+				return ((ManaLinkEntry)obj).entityID == entityID;
 			return false;
 		}
 	}
