@@ -240,6 +240,8 @@ public class AMConfig extends Configuration{
 	public static float dimGainReturn = 0.005f;
 	public static double dimGainLossMult = 1;
 
+	public static boolean inlayDrop = true;
+
 
 	public static final String DEFAULT_LANGUAGE = "en_US";
 
@@ -388,6 +390,7 @@ public class AMConfig extends Configuration{
 		minRed = get(dCat, "Min level for red skill points", "40","").getInt(40);
 		dimGainReturn = (float) get(dCat, "Diminishing gains return rate", "0.005", "Rate at which your xp gains return to normal").getDouble(0.005);
 		dimGainLossMult = get(dCat, "Diminishing gains loss multiplier", "1", "Multiplier for how much your xp gains go down").getDouble(1);
+		inlayDrop = get(dCat, "Inlays drop on block break", "true", "Whether inlays drop if the block beneath is broken").getBoolean(true);
 
 		initDirectProperties();
 
