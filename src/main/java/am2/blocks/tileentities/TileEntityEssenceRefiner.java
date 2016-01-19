@@ -324,10 +324,7 @@ public class TileEntityEssenceRefiner extends TileEntityAMPower implements IInve
 
 	@Override
 	public PowerTypes[] getValidPowerTypes(){
-		return new PowerTypes[]{
-				PowerTypes.NEUTRAL,
-				PowerTypes.DARK
-		};
+		return PowerTypes.arrNeg;
 	}
 
 

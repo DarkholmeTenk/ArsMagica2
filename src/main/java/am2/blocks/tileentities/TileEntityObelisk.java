@@ -1,5 +1,20 @@
 package am2.blocks.tileentities;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraftforge.common.util.Constants;
 import am2.ObeliskFuelHelper;
 import am2.api.blocks.MultiblockStructureDefinition;
 import am2.api.blocks.MultiblockStructureDefinition.StructureGroup;
@@ -15,21 +30,6 @@ import am2.power.PowerNodeRegistry;
 import am2.utility.InventoryUtilities;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraftforge.common.util.Constants;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockStructureController, IInventory{
 	protected static int pillarBlockID = 98; //stone brick
@@ -56,7 +56,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 
 	public TileEntityObelisk(){
 		this(5000);
-		inventory = new ItemStack[this.getSizeInventory()];
+		inventory = new ItemStack[getSizeInventory()];
 	}
 
 	protected void checkNearbyBlockState(){
@@ -123,15 +123,15 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 	}
 
 	public boolean isActive(){
-		return burnTimeRemaining > 0 || inventory[0] != null;
+		return (burnTimeRemaining > 0) || (inventory[0] != null);
 	}
 
 	public boolean isHighPowerActive(){
-		return burnTimeRemaining > 200 && inventory[0] != null;
+		return (burnTimeRemaining > 200) && (inventory[0] != null);
 	}
 
 	public int getCookProgressScaled(int par1){
-		return burnTimeRemaining * par1 / maxBurnTime;
+		return (burnTimeRemaining * par1) / maxBurnTime;
 	}
 
 	protected StructureGroup addWizChalkGroupToStructure(MultiblockStructureDefinition def, int mutex){
@@ -139,7 +139,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 
 		for (int i = -1; i <= 1; ++i){
 			for (int j = -1; j <= 1; ++j){
-				if (i == 0 && j == 0) continue;
+				if ((i == 0) && (j == 0)) continue;
 				def.addAllowedBlock(group, i, 0, j, BlocksCommonProxy.wizardChalk);
 			}
 		}
@@ -160,26 +160,26 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 	@Override
 	public Packet getDescriptionPacket(){
 		NBTTagCompound compound = new NBTTagCompound();
-		this.writeToNBT(compound);
+		writeToNBT(compound);
 		S35PacketUpdateTileEntity packet = new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, worldObj.getBlockMetadata(xCoord, yCoord, zCoord), compound);
 		return packet;
 	}
 
 	@Override
 	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt){
-		this.readFromNBT(pkt.func_148857_g());
+		readFromNBT(pkt.func_148857_g());
 	}
 
 	private void sendCookUpdateToClients(){
 		if (!worldObj.isRemote){
-			AMNetHandler.INSTANCE.sendObeliskUpdate(this, new AMDataWriter().add(PK_BURNTIME_CHANGE).add(this.burnTimeRemaining).generate());
+			AMNetHandler.INSTANCE.sendObeliskUpdate(this, new AMDataWriter().add(PK_BURNTIME_CHANGE).add(burnTimeRemaining).generate());
 		}
 	}
 
 	public void handlePacket(byte[] data){
 		AMDataReader rdr = new AMDataReader(data);
-		if (rdr.ID == this.PK_BURNTIME_CHANGE)
-			this.burnTimeRemaining = rdr.getInt();
+		if (rdr.ID == PK_BURNTIME_CHANGE)
+			burnTimeRemaining = rdr.getInt();
 	}
 
 	@Override
@@ -187,11 +187,11 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 		surroundingCheckTicks++;
 
 		if (isActive()){
-			if (surroundingCheckTicks % 100 == 0){
+			if ((surroundingCheckTicks % 100) == 0){
 				checkNearbyBlockState();
 				surroundingCheckTicks = 1;
-				if (!worldObj.isRemote && PowerNodeRegistry.For(this.worldObj).checkPower(this, this.capacity * 0.1f)){
-					List<EntityPlayer> nearbyPlayers = worldObj.getEntitiesWithinAABB(EntityPlayer.class, AxisAlignedBB.getBoundingBox(this.xCoord - 2, this.yCoord, this.zCoord - 2, this.xCoord + 2, this.yCoord + 3, this.zCoord + 2));
+				if (!worldObj.isRemote && PowerNodeRegistry.For(worldObj).checkPower(this, capacity * 0.1f)){
+					List<EntityPlayer> nearbyPlayers = worldObj.getEntitiesWithinAABB(EntityPlayer.class, AxisAlignedBB.getBoundingBox(xCoord - 2, yCoord, zCoord - 2, xCoord + 2, yCoord + 3, zCoord + 2));
 					for (EntityPlayer p : nearbyPlayers){
 						if (p.isPotionActive(BuffList.manaRegen.id)) continue;
 						p.addPotionEffect(new BuffEffectManaRegen(600, 2));
@@ -202,15 +202,15 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 			float powerAmt = PowerNodeRegistry.For(worldObj).getPower(this, PowerTypes.NEUTRAL);
 			float powerAdded = inventory[0] != null ? ObeliskFuelHelper.instance.getFuelBurnTime(inventory[0]) * (powerBase * powerMultiplier) : 0;
 
-			float chargeThreshold = Math.max(this.getCapacity() - powerAdded, this.getCapacity() * 0.75f);
+			float chargeThreshold = Math.max(getCapacity() - powerAdded, getCapacity() * 0.75f);
 
-			if (burnTimeRemaining <= 0 && powerAmt < chargeThreshold){
+			if ((burnTimeRemaining <= 0) && (powerAmt < chargeThreshold)){
 				burnTimeRemaining = ObeliskFuelHelper.instance.getFuelBurnTime(inventory[0]);
 				if (burnTimeRemaining > 0){
 					setMaxBurnTime(burnTimeRemaining);
 
-					if (this.inventory[0].getItem().hasContainerItem(this.inventory[0]))
-						this.inventory[0] = new ItemStack(this.inventory[0].getItem().getContainerItem());
+					if (inventory[0].getItem().hasContainerItem(inventory[0]))
+						inventory[0] = new ItemStack(inventory[0].getItem().getContainerItem());
 					else
 						InventoryUtilities.decrementStackQuantity(this, 0, 1);
 
@@ -222,7 +222,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 				burnTimeRemaining--;
 				PowerNodeRegistry.For(worldObj).insertPower(this, PowerTypes.NEUTRAL, powerBase * powerMultiplier);
 
-				if (burnTimeRemaining % 20 == 0)
+				if ((burnTimeRemaining % 20) == 0)
 					sendCookUpdateToClients();
 			}
 		}else{
@@ -284,9 +284,9 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 			inventory = new ItemStack[getSizeInventory()];
 			for (int i = 0; i < nbttaglist.tagCount(); i++){
 				String tag = String.format("ArrayIndex", i);
-				NBTTagCompound nbttagcompound1 = (NBTTagCompound)nbttaglist.getCompoundTagAt(i);
+				NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
 				byte byte0 = nbttagcompound1.getByte(tag);
-				if (byte0 >= 0 && byte0 < inventory.length){
+				if ((byte0 >= 0) && (byte0 < inventory.length)){
 					inventory[byte0] = ItemStack.loadItemStackFromNBT(nbttagcompound1);
 				}
 			}
@@ -295,7 +295,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 
 	@Override
 	public int getChargeRate(){
-		return 0;
+		return 1000;
 	}
 
 	@Override
@@ -305,12 +305,12 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 
 	@Override
 	public PowerTypes[] getValidPowerTypes(){
-		return new PowerTypes[]{PowerTypes.NEUTRAL};
+		return PowerTypes.arrNeutral;
 	}
 
 	@Override
 	public boolean canRequestPower(){
-		return false;
+		return true;
 	}
 
 	@Override
@@ -320,7 +320,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 
 	@Override
 	public ItemStack getStackInSlot(int i){
-		if (i < 0 || i >= this.getSizeInventory())
+		if ((i < 0) || (i >= getSizeInventory()))
 			return null;
 		return inventory[i];
 	}
@@ -357,7 +357,7 @@ public class TileEntityObelisk extends TileEntityAMPower implements IMultiblockS
 	@Override
 	public void setInventorySlotContents(int i, ItemStack itemstack){
 		inventory[i] = itemstack;
-		if (itemstack != null && itemstack.stackSize > getInventoryStackLimit()){
+		if ((itemstack != null) && (itemstack.stackSize > getInventoryStackLimit())){
 			itemstack.stackSize = getInventoryStackLimit();
 		}
 	}

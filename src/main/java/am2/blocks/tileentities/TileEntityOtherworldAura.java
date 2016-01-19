@@ -1,25 +1,23 @@
 package am2.blocks.tileentities;
 
-import am2.api.math.AMVector3;
-import am2.api.power.PowerTypes;
-import am2.entities.EntityShadowHelper;
-import am2.items.ItemsCommonProxy;
-import am2.power.PowerNodeRegistry;
-import am2.utility.InventoryUtilities;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-
-import java.util.ArrayList;
-import java.util.Iterator;
+import am2.api.math.AMVector3;
+import am2.api.power.PowerTypes;
+import am2.entities.EntityShadowHelper;
+import am2.items.ItemEssence;
+import am2.items.ItemsCommonProxy;
+import am2.power.PowerNodeRegistry;
+import am2.utility.InventoryUtilities;
 
 public class TileEntityOtherworldAura extends TileEntityAMPower{
 
-	private PowerTypes[] valid = new PowerTypes[]{
-			PowerTypes.DARK,
-			PowerTypes.NEUTRAL
-	};
+	private PowerTypes[] valid = PowerTypes.arrNeg;
 
 	private ArrayList<AMVector3> nearbyInventories;
 	private boolean active;
@@ -57,9 +55,9 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 		}else{
 			nearbyInventories = null;
 			watchTarget = null;
-			if (this.helper != null){
-				this.helper.unSummon();
-				this.helper = null;
+			if (helper != null){
+				helper.unSummon();
+				helper = null;
 			}
 		}
 	}
@@ -70,7 +68,7 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 		for (int i = -radius; i <= radius; ++i){
 			for (int j = -radius; j <= radius; ++j){
 				for (int k = -radius; k <= radius; ++k){
-					if (i == 0 && j == 0 && k == 0) continue;
+					if ((i == 0) && (j == 0) && (k == 0)) continue;
 					TileEntity te = worldObj.getTileEntity(xCoord + i, yCoord + j, zCoord + k);
 					if (te == null) continue;
 					if (!(te instanceof IInventory)) continue;
@@ -81,11 +79,11 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 	}
 
 	private AMVector3 findInNearbyInventories(ItemStack search){
-		Iterator<AMVector3> it = this.nearbyInventories.iterator();
+		Iterator<AMVector3> it = nearbyInventories.iterator();
 		while (it.hasNext()){
 			AMVector3 vec = it.next();
 			TileEntity te = worldObj.getTileEntity((int)vec.x, (int)vec.y, (int)vec.z);
-			if (te == null || !(te instanceof IInventory)){
+			if ((te == null) || !(te instanceof IInventory)){
 				//not found, prune list and move on
 				it.remove();
 				continue;
@@ -102,19 +100,19 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 	}
 
 	private void spawnHelper(){
-		if (helper != null || worldObj.isRemote)
+		if ((helper != null) || worldObj.isRemote)
 			return;
 
-		this.helper = new EntityShadowHelper(worldObj);
-		this.helper.setPosition(xCoord, yCoord + 1, zCoord);
-		if (this.watchTarget != null)
-			this.helper.setAltarTarget(watchTarget);
-		this.worldObj.spawnEntityInWorld(helper);
+		helper = new EntityShadowHelper(worldObj);
+		helper.setPosition(xCoord, yCoord + 1, zCoord);
+		if (watchTarget != null)
+			helper.setAltarTarget(watchTarget);
+		worldObj.spawnEntityInWorld(helper);
 
-		if (this.watchTarget != null){
-			this.helper.setDropoffLocation(new AMVector3(watchTarget.xCoord, watchTarget.yCoord - 2, watchTarget.zCoord));
-			if (placedByUsername != null && !placedByUsername.isEmpty())
-				this.helper.setMimicUser(placedByUsername);
+		if (watchTarget != null){
+			helper.setDropoffLocation(new AMVector3(watchTarget.xCoord, watchTarget.yCoord - 2, watchTarget.zCoord));
+			if ((placedByUsername != null) && !placedByUsername.isEmpty())
+				helper.setMimicUser(placedByUsername);
 		}
 	}
 
@@ -124,12 +122,12 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 
 		//sanity check
 		if (nearbyInventories == null) return;
-		if (watchTarget == null || !watchTarget.isCrafting()){
+		if ((watchTarget == null) || !watchTarget.isCrafting()){
 			setActive(false, null);
 			return;
 		}
 
-		if (helper != null && helper.isDead){
+		if ((helper != null) && helper.isDead){
 			return;
 		}
 
@@ -146,9 +144,9 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 						return;
 					}
 
-					if (next.getItem() == ItemsCommonProxy.essence && next.getItemDamage() > ItemsCommonProxy.essence.META_MAX){
-						if (!this.helper.hasSearchLocation())
-							this.helper.setSearchLocationAndItem(new AMVector3(1, 1, 1), next);
+					if ((next.getItem() == ItemsCommonProxy.essence) && (next.getItemDamage() > ItemEssence.META_MAX)){
+						if (!helper.hasSearchLocation())
+							helper.setSearchLocationAndItem(new AMVector3(1, 1, 1), next);
 						delayCounter = 100;
 					}else{
 						AMVector3 location = findInNearbyInventories(next);
@@ -159,22 +157,22 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 							return;
 						}else{
 							cantFindItem = false;
-							if (!this.helper.hasSearchLocation())
-								this.helper.setSearchLocationAndItem(location, next);
+							if (!helper.hasSearchLocation())
+								helper.setSearchLocationAndItem(location, next);
 							delayCounter = 20; //delay for 5s (give the helper time to get the item and toss it in)
 						}
 					}
 				}
 				PowerNodeRegistry.For(worldObj).consumePower(this, PowerNodeRegistry.For(worldObj).getHighestPowerType(this), 1.25f);
 			}else{
-				if (this.helper != null)
-					this.helper.unSummon();
+				if (helper != null)
+					helper.unSummon();
 			}
 		}
 	}
 
 	public void setPlacedByUsername(String userName){
-		this.placedByUsername = userName;
+		placedByUsername = userName;
 	}
 
 	@Override
@@ -186,6 +184,6 @@ public class TileEntityOtherworldAura extends TileEntityAMPower{
 	@Override
 	public void readFromNBT(NBTTagCompound nbttagcompound){
 		super.readFromNBT(nbttagcompound);
-		this.placedByUsername = nbttagcompound.getString("placedBy");
+		placedByUsername = nbttagcompound.getString("placedBy");
 	}
 }

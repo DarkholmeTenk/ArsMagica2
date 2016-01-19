@@ -1,11 +1,11 @@
 package am2.blocks.tileentities;
 
-import am2.api.power.IPowerNode;
-import am2.api.power.PowerTypes;
-import am2.power.PowerNodeRegistry;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import am2.api.power.IPowerNode;
+import am2.api.power.PowerTypes;
+import am2.power.PowerNodeRegistry;
 
 public abstract class TileEntityAMPower extends TileEntity implements IPowerNode{
 	protected int capacity;
@@ -36,17 +36,17 @@ public abstract class TileEntityAMPower extends TileEntity implements IPowerNode
 
 	@Override
 	public void invalidate(){
-		PowerNodeRegistry.For(this.worldObj).removePowerNode(this);
+		PowerNodeRegistry.For(worldObj).removePowerNode(this);
 		super.invalidate();
 	}
 
 	@Override
 	public void updateEntity(){
-		if (!worldObj.isRemote && this.canRequestPower() && tickCounter++ >= getRequestInterval()){
+		if (!worldObj.isRemote && canRequestPower() && (tickCounter++ >= getRequestInterval())){
 			tickCounter = 0;
-			PowerTypes[] powerTypes = this.getValidPowerTypes();
+			PowerTypes[] powerTypes = getValidPowerTypes();
 			for (PowerTypes type : powerTypes){
-				float amtObtained = PowerNodeRegistry.For(worldObj).requestPower(this, type, this.getChargeRate());
+				float amtObtained = PowerNodeRegistry.For(worldObj).requestPower(this, type, getChargeRate());
 				if (amtObtained > 0)
 					PowerNodeRegistry.For(worldObj).insertPower(this, type, amtObtained);
 			}
@@ -70,7 +70,7 @@ public abstract class TileEntityAMPower extends TileEntity implements IPowerNode
 	@Override
 	public void setWorldObj(World par1World){
 		super.setWorldObj(par1World);
-		PowerNodeRegistry.For(this.worldObj).registerPowerNode(this);
+		PowerNodeRegistry.For(worldObj).registerPowerNode(this);
 	}
 
 	@Override
@@ -80,16 +80,16 @@ public abstract class TileEntityAMPower extends TileEntity implements IPowerNode
 
 	@Override
 	public float getCapacity(){
-		return this.capacity;
+		return capacity;
 	}
 
 	public void setPower(PowerTypes type, float amount){
-		PowerNodeRegistry.For(this.worldObj).setPower(this, type, amount);
+		PowerNodeRegistry.For(worldObj).setPower(this, type, amount);
 	}
 
 	@Override
 	public PowerTypes[] getValidPowerTypes(){
-		return PowerTypes.all();
+		return PowerTypes.arrAll;
 	}
 
 	@Override

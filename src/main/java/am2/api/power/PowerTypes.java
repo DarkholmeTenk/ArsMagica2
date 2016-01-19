@@ -1,10 +1,10 @@
 package am2.api.power;
 
-import am2.LogHelper;
-import am2.api.ArsMagicaApi;
-
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+
+import am2.LogHelper;
+import am2.api.ArsMagicaApi;
 
 public final class PowerTypes{
 
@@ -18,6 +18,15 @@ public final class PowerTypes{
 		add(NEUTRAL);
 		add(DARK);
 	}};
+
+	public static final PowerTypes[] arrLight = new PowerTypes[]{LIGHT};
+	public static final PowerTypes[] arrDark = new PowerTypes[]{DARK};
+	public static final PowerTypes[] arrNeutral = new PowerTypes[]{NEUTRAL};
+	public static final PowerTypes[] arrPos = new PowerTypes[]{LIGHT,NEUTRAL};
+	public static final PowerTypes[] arrNeg = new PowerTypes[]{NEUTRAL,DARK};
+	public static final PowerTypes[] arrOpp = new PowerTypes[]{LIGHT,DARK};
+	public static final PowerTypes[] arrAll = new PowerTypes[]{LIGHT,NEUTRAL,DARK};
+	public static final PowerTypes[] arrNone = new PowerTypes[]{NONE};
 
 	private int _id;
 	private String _name;
@@ -57,7 +66,7 @@ public final class PowerTypes{
 	}
 
 	public static PowerTypes[] all(){
-		return allPowerTypes.toArray(new PowerTypes[allPowerTypes.size()]);
+		return arrAll;
 	}
 
 	public static PowerTypes getByID(int id){
