@@ -68,13 +68,14 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 		readFromNBT(pkt.func_148857_g());
 	}
 
+	int tt = 0;
 	@Override
 	public void updateEntity(){
 		super.updateEntity();
 
 		int radius = getRadius();
 
-		if (IsActive()){
+		if (IsActive()	&& ((tt++ % getRequestInterval()) == 0)){
 			PowerNodeRegistry.For(worldObj).consumePower(this, PowerNodeRegistry.For(worldObj).getHighestPowerType(this), 0.35f * radius);
 		}
 
