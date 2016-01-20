@@ -1,15 +1,5 @@
 package am2.blocks.tileentities;
 
-import am2.AMCore;
-import am2.api.blocks.IKeystoneLockable;
-import am2.api.power.PowerTypes;
-import am2.items.ISpellFocus;
-import am2.network.AMDataWriter;
-import am2.particles.AMParticle;
-import am2.particles.ParticleFadeOut;
-import am2.particles.ParticleHoldPosition;
-import am2.particles.ParticleOrbitPoint;
-import am2.power.PowerNodeRegistry;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -21,8 +11,16 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.common.util.Constants;
-
-import java.util.Random;
+import am2.AMCore;
+import am2.api.blocks.IKeystoneLockable;
+import am2.api.power.PowerTypes;
+import am2.items.ISpellFocus;
+import am2.network.AMDataWriter;
+import am2.particles.AMParticle;
+import am2.particles.ParticleFadeOut;
+import am2.particles.ParticleHoldPosition;
+import am2.particles.ParticleOrbitPoint;
+import am2.power.PowerNodeRegistry;
 
 public class TileEntityAstralBarrier extends TileEntityAMPower implements IInventory, IKeystoneLockable{
 
@@ -42,19 +40,19 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 	}
 
 	public void ToggleAuraDisplay(){
-		this.displayAura = !this.displayAura;
+		displayAura = !displayAura;
 	}
 
 	public int getRadius(){
-		if (this.inventory[0] != null && this.inventory[0].getItem() instanceof ISpellFocus){
-			ISpellFocus focus = (ISpellFocus)this.inventory[0].getItem();
+		if ((inventory[0] != null) && (inventory[0].getItem() instanceof ISpellFocus)){
+			ISpellFocus focus = (ISpellFocus)inventory[0].getItem();
 			return (focus.getFocusLevel() + 1) * 5;
 		}
 		return 0;
 	}
 
 	public boolean IsActive(){
-		return PowerNodeRegistry.For(this.worldObj).checkPower(this, 0.35f * getRadius()) && worldObj.isBlockIndirectlyGettingPowered(this.xCoord, this.yCoord, this.zCoord) && getRadius() > 0;
+		return PowerNodeRegistry.For(worldObj).checkPower(this, 0.35f * getRadius()) && worldObj.isBlockIndirectlyGettingPowered(xCoord, yCoord, zCoord) && (getRadius() > 0);
 	}
 
 	@Override
@@ -67,7 +65,7 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 
 	@Override
 	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt){
-		this.readFromNBT(pkt.func_148857_g());
+		readFromNBT(pkt.func_148857_g());
 	}
 
 	@Override
@@ -77,13 +75,13 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 		int radius = getRadius();
 
 		if (IsActive()){
-			PowerNodeRegistry.For(this.worldObj).consumePower(this, PowerNodeRegistry.For(worldObj).getHighestPowerType(this), 0.35f * radius);
+			PowerNodeRegistry.For(worldObj).consumePower(this, PowerNodeRegistry.For(worldObj).getHighestPowerType(this), 0.35f * radius);
 		}
 
 		if (worldObj.isRemote){
 			if (IsActive()){
 				if (displayAura){
-					AMParticle effect = (AMParticle)AMCore.instance.proxy.particleManager.spawn(worldObj, "symbols", xCoord, yCoord + 0.5, zCoord);
+					AMParticle effect = (AMParticle)AMCore.proxy.particleManager.spawn(worldObj, "symbols", xCoord, yCoord + 0.5, zCoord);
 					if (effect != null){
 						effect.setIgnoreMaxAge(false);
 						effect.setMaxAge(100);
@@ -99,13 +97,13 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 					particleTickCounter = 0;
 
 					String particleName = "";
-					AMParticle effect = (AMParticle)AMCore.instance.proxy.particleManager.spawn(worldObj, "sparkle", xCoord + 0.5, yCoord + 0.1 + worldObj.rand.nextDouble() * 0.5, zCoord + 0.5);
+					AMParticle effect = (AMParticle)AMCore.proxy.particleManager.spawn(worldObj, "sparkle", xCoord + 0.5, yCoord + 0.1 + (worldObj.rand.nextDouble() * 0.5), zCoord + 0.5);
 					if (effect != null){
 						effect.setIgnoreMaxAge(false);
 						effect.setMaxAge(100);
 						effect.setParticleScale(0.5f);
-						float color = worldObj.rand.nextFloat() * 0.2f + 0.8f;
-						effect.AddParticleController(new ParticleOrbitPoint(effect, xCoord + 0.5, yCoord + 0.5, zCoord + 0.5, 1, false).SetOrbitSpeed(0.005).SetTargetDistance(worldObj.rand.nextDouble() * 0.6 - 0.3));
+						float color = (worldObj.rand.nextFloat() * 0.2f) + 0.8f;
+						effect.AddParticleController(new ParticleOrbitPoint(effect, xCoord + 0.5, yCoord + 0.5, zCoord + 0.5, 1, false).SetOrbitSpeed(0.005).SetTargetDistance((worldObj.rand.nextDouble() * 0.6) - 0.3));
 						effect.AddParticleController(new ParticleHoldPosition(effect, 80, 2, true));
 						effect.AddParticleController(new ParticleFadeOut(effect, 3, false).setFadeSpeed(0.05f));
 					}
@@ -115,7 +113,7 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 	}
 
 	public void onEntityBlocked(EntityLivingBase entity){
-		if (this.worldObj.isRemote){
+		if (worldObj.isRemote){
 			if (PowerNodeRegistry.For(getWorldObj()).checkPower(this, PowerTypes.DARK, 50)){
 				entity.attackEntityFrom(DamageSource.magic, 5);
 				PowerNodeRegistry.For(getWorldObj()).consumePower(this, PowerTypes.DARK, 50);
@@ -167,7 +165,7 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 	@Override
 	public void setInventorySlotContents(int i, ItemStack itemstack){
 		inventory[i] = itemstack;
-		if (itemstack != null && itemstack.stackSize > getInventoryStackLimit()){
+		if ((itemstack != null) && (itemstack.stackSize > getInventoryStackLimit())){
 			itemstack.stackSize = getInventoryStackLimit();
 		}
 	}
@@ -205,9 +203,9 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 		inventory = new ItemStack[getSizeInventory()];
 		for (int i = 0; i < nbttaglist.tagCount(); i++){
 			String tag = String.format("ArrayIndex", i);
-			NBTTagCompound nbttagcompound1 = (NBTTagCompound)nbttaglist.getCompoundTagAt(i);
+			NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
 			byte byte0 = nbttagcompound1.getByte(tag);
-			if (byte0 >= 0 && byte0 < inventory.length){
+			if ((byte0 >= 0) && (byte0 < inventory.length)){
 				inventory[byte0] = ItemStack.loadItemStackFromNBT(nbttagcompound1);
 			}
 		}
@@ -259,7 +257,7 @@ public class TileEntityAstralBarrier extends TileEntityAMPower implements IInven
 
 	@Override
 	public int getChargeRate(){
-		return 50;
+		return 250;
 	}
 
 	@Override
