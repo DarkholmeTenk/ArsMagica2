@@ -97,13 +97,20 @@ public class CCInterop implements IPeripheralProvider
 			NBTTagCompound nbt = is.stackTagCompound;
 			if(nbt == null) return null;
 			NBTTagList list = nbt.getTagList("pages", 8);
-			Object[] data = new Object[list.tagCount()];
+			String[][] data = new String[list.tagCount()][];
+			int count = 0;
 			for(int i = 0; i < data.length; i++)
 			{
 				String s = list.getStringTagAt(i);
 				data[i] = s.split("\n");
+				count += data[i].length;
 			}
-			return data;
+			Object[] returnData = new Object[count];
+			int c = 0;
+			for(int i = 0; i < data.length; i++)
+				for(int j = 0; j < data[i].length; j++)
+					returnData[c++] = data[i][j];
+			return returnData;
 		}
 
 		@Override
