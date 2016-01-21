@@ -1,5 +1,13 @@
 package am2.spell.components;
 
+import java.util.EnumSet;
+import java.util.Random;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EnumCreatureAttribute;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import am2.AMCore;
 import am2.api.ArsMagicaApi;
 import am2.api.spell.component.interfaces.ISpellComponent;
@@ -7,20 +15,17 @@ import am2.api.spell.enums.Affinity;
 import am2.api.spell.enums.SpellModifiers;
 import am2.blocks.BlocksCommonProxy;
 import am2.damage.DamageSources;
+import am2.items.ItemRune;
 import am2.items.ItemsCommonProxy;
-import am2.particles.*;
+import am2.particles.AMParticle;
+import am2.particles.ParticleFadeOut;
+import am2.particles.ParticleFloatUpward;
+import am2.particles.ParticleHoldPosition;
+import am2.particles.ParticleOrbitEntity;
 import am2.playerextensions.AffinityData;
 import am2.playerextensions.ExtendedProperties;
 import am2.spell.SpellHelper;
 import am2.spell.SpellUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.EnumCreatureAttribute;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-
-import java.util.EnumSet;
-import java.util.Random;
 
 public class Heal implements ISpellComponent{
 
@@ -35,12 +40,12 @@ public class Heal implements ISpellComponent{
 			if (((EntityLivingBase)target).getCreatureAttribute() == EnumCreatureAttribute.UNDEAD){
 				int healing = SpellUtils.instance.getModifiedInt_Mul(10, stack, caster, target, world, 0, SpellModifiers.HEALING);
 				target.setFire(2);
-				return SpellHelper.instance.attackTargetSpecial(stack, target, DamageSources.causeEntityHolyDamage(caster), healing * (0.5f + 2 * AffinityData.For(caster).getAffinityDepth(Affinity.LIFE)));
+				return SpellHelper.instance.attackTargetSpecial(stack, target, DamageSources.causeEntityHolyDamage(caster), healing * (0.5f + (2 * AffinityData.For(caster).getAffinityDepth(Affinity.LIFE))));
 			}else{
 				int healing = SpellUtils.instance.getModifiedInt_Mul(2, stack, caster, target, world, 0, SpellModifiers.HEALING);
 				if (ExtendedProperties.For((EntityLivingBase)target).getCanHeal()){
 					((EntityLivingBase)target).heal(healing);
-					ExtendedProperties.For((EntityLivingBase)target).setHealCooldown(60);
+					ExtendedProperties.For((EntityLivingBase)target).setHealCooldown(10);
 					return true;
 				}
 			}
@@ -55,7 +60,7 @@ public class Heal implements ISpellComponent{
 
 	@Override
 	public float burnout(EntityLivingBase caster){
-		return ArsMagicaApi.instance.getBurnoutFromMana(manaCost(caster));
+		return ArsMagicaApi.getBurnoutFromMana(manaCost(caster));
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class Heal implements ISpellComponent{
 
 	@Override
 	public void spawnParticles(World world, double x, double y, double z, EntityLivingBase caster, Entity target, Random rand, int colorModifier){
-		if (target instanceof EntityLivingBase && ((EntityLivingBase)target).getCreatureAttribute() == EnumCreatureAttribute.UNDEAD){
+		if ((target instanceof EntityLivingBase) && (((EntityLivingBase)target).getCreatureAttribute() == EnumCreatureAttribute.UNDEAD)){
 			for (int i = 0; i < 25; ++i){
 				AMParticle particle = (AMParticle)AMCore.proxy.particleManager.spawn(world, "symbols", x, y - 1, z);
 				if (particle != null){
@@ -83,7 +88,7 @@ public class Heal implements ISpellComponent{
 				if (particle != null){
 					particle.addRandomOffset(1, 1, 1);
 					particle.AddParticleController(new ParticleFloatUpward(particle, 0, 0.1f, 1, false));
-					particle.AddParticleController(new ParticleOrbitEntity(particle, target, 0.5f, 2, false).setIgnoreYCoordinate(true).SetTargetDistance(0.3f + rand.nextDouble() * 0.3));
+					particle.AddParticleController(new ParticleOrbitEntity(particle, target, 0.5f, 2, false).setIgnoreYCoordinate(true).SetTargetDistance(0.3f + (rand.nextDouble() * 0.3)));
 					particle.setMaxAge(20);
 					particle.setParticleScale(0.2f);
 					particle.setRGBColorF(0.1f, 1f, 0.1f);
@@ -97,7 +102,7 @@ public class Heal implements ISpellComponent{
 
 	@Override
 	public EnumSet<Affinity> getAffinity(){
-		return EnumSet.of(Affinity.LIFE);
+		return EnumSet.of(Affinity.LIFE, Affinity.NONE, Affinity.NONE);
 	}
 
 	@Override
@@ -108,7 +113,7 @@ public class Heal implements ISpellComponent{
 	@Override
 	public Object[] getRecipeItems(){
 		return new Object[]{
-				new ItemStack(ItemsCommonProxy.rune, 1, ItemsCommonProxy.rune.META_GREEN),
+				new ItemStack(ItemsCommonProxy.rune, 1, ItemRune.META_GREEN),
 				BlocksCommonProxy.aum
 		};
 	}
