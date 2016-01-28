@@ -118,7 +118,7 @@ public class AffinityData implements IExtendedEntityProperties, IAffinityData{
 		float minorOppositeDecrement = amt * MINOR_OPPOSING_FACTOR;
 		float majorOppositeDecrement = amt * MAJOR_OPPOSING_FACTOR;
 
-		addToAffinity(affinity, amt);
+		addToAffinity(affinity, amt * AMConfig.affinityMult);
 
 		if ((getAffinityDepth(affinity) * MAX_DEPTH) == MAX_DEPTH){
 			isLocked = true;

@@ -239,6 +239,8 @@ public class AMConfig extends Configuration{
 	public static int minRed = 40;
 	public static float dimGainReturn = 0.005f;
 	public static double dimGainLossMult = 1;
+	public static double augmentedMult = 1.5;
+	public static float affinityMult = 0.5f;
 
 	public static boolean inlayDrop = true;
 
@@ -391,6 +393,8 @@ public class AMConfig extends Configuration{
 		dimGainReturn = (float) get(dCat, "Diminishing gains return rate", "0.005", "Rate at which your xp gains return to normal").getDouble(0.005);
 		dimGainLossMult = get(dCat, "Diminishing gains loss multiplier", "1", "Multiplier for how much your xp gains go down").getDouble(1);
 		inlayDrop = get(dCat, "Inlays drop on block break", "true", "Whether inlays drop if the block beneath is broken").getBoolean(true);
+		augmentedMult = get(dCat, "Augmented multiplier", "1.5", "The multiplier augmented casting applies to things").getDouble(1.5);
+		affinityMult = (float) get(dCat, "Affinity multiplier", "0.5","").getDouble(0.5);
 
 		initDirectProperties();
 
