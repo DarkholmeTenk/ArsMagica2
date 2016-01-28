@@ -114,11 +114,12 @@ public class AffinityData implements IExtendedEntityProperties, IAffinityData{
 	public void incrementAffinity(Affinity affinity, float amt){
 		if ((affinity == Affinity.NONE) || isLocked) return;
 
+		amt *= AMConfig.affinityMult;
 		float adjacentDecrement = amt * ADJACENT_FACTOR;
 		float minorOppositeDecrement = amt * MINOR_OPPOSING_FACTOR;
 		float majorOppositeDecrement = amt * MAJOR_OPPOSING_FACTOR;
 
-		addToAffinity(affinity, amt * AMConfig.affinityMult);
+		addToAffinity(affinity, amt);
 
 		if ((getAffinityDepth(affinity) * MAX_DEPTH) == MAX_DEPTH){
 			isLocked = true;
