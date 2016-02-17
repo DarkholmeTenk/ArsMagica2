@@ -1,23 +1,29 @@
 package am2.blocks.tileentities.flickers;
 
-import am2.api.flickers.IFlickerController;
-import am2.api.flickers.IFlickerFunctionality;
-import am2.api.math.AMVector3;
-import am2.api.spell.enums.Affinity;
-import am2.blocks.BlocksCommonProxy;
-import am2.items.ItemsCommonProxy;
-import am2.network.AMDataReader;
-import am2.network.AMDataWriter;
-import am2.utility.DummyEntityPlayer;
-import am2.utility.InventoryUtilities;
+import java.util.List;
+
 import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import am2.api.flickers.IFlickerController;
+import am2.api.flickers.IFlickerFunctionality;
+import am2.api.math.AMVector3;
+import am2.api.spell.enums.Affinity;
+import am2.blocks.BlocksCommonProxy;
+import am2.items.ItemBindingCatalyst;
+import am2.items.ItemRune;
+import am2.items.ItemsCommonProxy;
+import am2.network.AMDataReader;
+import am2.network.AMDataWriter;
+import am2.utility.DummyEntityPlayer;
+import am2.utility.InventoryUtilities;
 
 public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 
@@ -31,13 +37,13 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 	}
 
 	void destroyTree(World world, int x, int y, int z, Block block, int meta){
-		for (int xPos = x - 1; xPos <= x + 1; xPos++){
-			for (int yPos = y; yPos <= y + 1; yPos++){
-				for (int zPos = z - 1; zPos <= z + 1; zPos++){
+		for (int xPos = x - 1; xPos <= (x + 1); xPos++){
+			for (int yPos = y; yPos <= (y + 1); yPos++){
+				for (int zPos = z - 1; zPos <= (z + 1); zPos++){
 					Block localblock = world.getBlock(xPos, yPos, zPos);
 					if (block == localblock){
 						meta = world.getBlockMetadata(xPos, yPos, zPos);
-						if (localblock == block && world.getBlockMetadata(xPos, yPos, zPos) % 4 == meta % 4){
+						if ((localblock == block) && ((world.getBlockMetadata(xPos, yPos, zPos) % 4) == (meta % 4))){
 							if (block.removedByPlayer(world, dummyPlayer, xPos, yPos, zPos)){
 								block.onBlockDestroyedByPlayer(world, xPos, yPos, zPos, meta);
 							}
@@ -75,12 +81,12 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 			}while (!foundTop);
 
 			int numLeaves = 0;
-			if (height - y < 50){
-				for (int xPos = x - 1; xPos <= x + 1; xPos++){
-					for (int yPos = height - 1; yPos <= height + 1; yPos++){
-						for (int zPos = z - 1; zPos <= z + 1; zPos++){
+			if ((height - y) < 50){
+				for (int xPos = x - 1; xPos <= (x + 1); xPos++){
+					for (int yPos = height - 1; yPos <= (height + 1); yPos++){
+						for (int zPos = z - 1; zPos <= (z + 1); zPos++){
 							Block leaves = world.getBlock(xPos, yPos, zPos);
-							if (leaves != null && leaves.isLeaves(world, xPos, yPos, zPos))
+							if ((leaves != null) && leaves.isLeaves(world, xPos, yPos, zPos))
 								numLeaves++;
 						}
 					}
@@ -117,12 +123,12 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 	}
 
 	private AMVector3 getPlantLocation(World worldObj, IFlickerController habitat, ItemStack sapling){
-		if (sapling.getItem() instanceof ItemBlock == false)
+		if ((sapling.getItem() instanceof ItemBlock) == false)
 			return null;
 		TileEntity te = (TileEntity)habitat;
 		byte[] data = habitat.getMetadata(this);
 		AMVector3 offset = null;
-		if (data == null || data.length == 0){
+		if ((data == null) || (data.length == 0)){
 			offset = new AMVector3(te.xCoord - radius_horiz, te.yCoord - radius_vert, te.zCoord - radius_horiz);
 		}else{
 			AMDataReader reader = new AMDataReader(data, false);
@@ -131,9 +137,9 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 
 		Block treeBlock = ((ItemBlock)sapling.getItem()).field_150939_a;
 
-		for (int i = (int)offset.x; i <= te.xCoord + radius_horiz; i += 2){
-			for (int k = (int)offset.z; k <= te.zCoord + radius_horiz; k += 2){
-				for (int j = (int)offset.y; j <= te.yCoord + radius_vert; ++j){
+		for (int i = (int)offset.x; i <= (te.xCoord + radius_horiz); i += 2){
+			for (int k = (int)offset.z; k <= (te.zCoord + radius_horiz); k += 2){
+				for (int j = (int)offset.y; j <= (te.yCoord + radius_vert); ++j){
 					Block block = worldObj.getBlock(i, j, k);
 					if (block.isReplaceable(worldObj, i, j, k) && treeBlock.canPlaceBlockAt(worldObj, i, j, k)){
 						AMDataWriter writer = new AMDataWriter();
@@ -172,6 +178,38 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 		return null;
 	}
 
+	private boolean putInNearbyChest(World worldObj, IFlickerController habitat, ItemStack is)
+	{
+		if((is == null) || (is.stackSize <= 0)) return true;
+		for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS){
+			IInventory inv = getOffsetInventory(worldObj, habitat, dir);
+			if (inv == null) continue;
+			int invSize = inv.getSizeInventory();
+			int slotSize = inv.getInventoryStackLimit();
+			int max = Math.max(is.getMaxStackSize(), slotSize);
+			for(int i = 0; i < invSize; i++)
+			{
+				if(is.stackSize <= 0) return true;
+				ItemStack slotIS = inv.getStackInSlot(i);
+				if(!inv.isItemValidForSlot(i, is)) continue;
+				if(slotIS == null)
+				{
+					inv.setInventorySlotContents(i, is);
+					return true;
+				}
+				if(slotIS.isItemEqual(is))
+				{
+					int toTrans = Math.min(max-slotIS.stackSize, is.stackSize);
+					if(toTrans == 0) continue;
+					is.stackSize -= toTrans;
+					slotIS.stackSize += toTrans;
+					if(is.stackSize == 0) return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private void deductSaplingFromNearbyChest(World worldObj, IFlickerController habitat){
 		for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS){
 			IInventory inv = getOffsetInventory(worldObj, habitat, dir);
@@ -191,7 +229,7 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 	private IInventory getOffsetInventory(World worldObj, IFlickerController habitat, ForgeDirection direction){
 		TileEntity te = (TileEntity)habitat;
 		TileEntity adjacent = worldObj.getTileEntity(te.xCoord + direction.offsetX, te.yCoord + direction.offsetY, te.zCoord + direction.offsetZ);
-		if (adjacent != null && adjacent instanceof IInventory)
+		if ((adjacent != null) && (adjacent instanceof IInventory))
 			return (IInventory)adjacent;
 		return null;
 	}
@@ -212,13 +250,33 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 
 		dummyPlayer = new DummyEntityPlayer(worldObj);
 
+		int x = ((TileEntity)habitat).xCoord;
+		int y = ((TileEntity)habitat).yCoord;
+		int z = ((TileEntity)habitat).zCoord;
+
+		AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(x-7, y-1, z-7, x+8, y+2, z+8);
+		List items = worldObj.getEntitiesWithinAABB(EntityItem.class, aabb);
+		if(items != null)
+		{
+			for(Object o : items)
+			{
+				if(!(o instanceof EntityItem)) continue;
+				EntityItem ei = (EntityItem)o;
+				ItemStack is = ei.getEntityItem();
+				if(putInNearbyChest(worldObj,habitat,is))
+				{
+					ei.setDead();
+				}
+			}
+		}
+
 		for (int i = -radius; i <= radius; ++i){
 			for (int j = -radius; j <= radius; ++j){
-				Block block = worldObj.getBlock(((TileEntity)habitat).xCoord + i, ((TileEntity)habitat).yCoord, ((TileEntity)habitat).zCoord + j);
+				Block block = worldObj.getBlock(x + i, y, z + j);
 				if (block == Blocks.air) continue;
-				if (block.isWood(worldObj, ((TileEntity)habitat).xCoord + i, ((TileEntity)habitat).yCoord, ((TileEntity)habitat).zCoord + j)){
+				if (block.isWood(worldObj, x + i, y, z + j)){
 					if (!worldObj.isRemote)
-						beginTreeFelling(worldObj, ((TileEntity)habitat).xCoord + i, ((TileEntity)habitat).yCoord, ((TileEntity)habitat).zCoord + j);
+						beginTreeFelling(worldObj, x + i, y, z + j);
 					return true;
 				}
 			}
@@ -270,11 +328,11 @@ public class FlickerOperatorFelledOak implements IFlickerFunctionality{
 				"NCL",
 				" OW",
 				Character.valueOf('W'), BlocksCommonProxy.witchwoodLog,
-				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.rune, 1, ItemsCommonProxy.rune.META_GREEN),
+				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.rune, 1, ItemRune.META_GREEN),
 				Character.valueOf('N'), new ItemStack(ItemsCommonProxy.flickerJar, 1, Affinity.NATURE.ordinal()),
 				Character.valueOf('L'), new ItemStack(ItemsCommonProxy.flickerJar, 1, Affinity.LIGHTNING.ordinal()),
-				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.rune, 1, ItemsCommonProxy.rune.META_ORANGE),
-				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.bindingCatalyst, 1, ItemsCommonProxy.bindingCatalyst.META_AXE)
+				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.rune, 1, ItemRune.META_ORANGE),
+				Character.valueOf('G'), new ItemStack(ItemsCommonProxy.bindingCatalyst, 1, ItemBindingCatalyst.META_AXE)
 		};
 	}
 }
