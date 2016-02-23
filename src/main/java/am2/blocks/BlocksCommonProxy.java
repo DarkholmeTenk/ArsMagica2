@@ -1,10 +1,64 @@
 package am2.blocks;
 
+import io.darkcraft.darkcore.mod.DarkcoreMod;
+import io.darkcraft.darkcore.mod.datastore.SimpleCoordStore;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemMultiTexture;
+import net.minecraft.item.ItemSlab;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import am2.AMCreativeTab;
-import am2.api.blocks.IKeystoneLockable;
-import am2.api.math.AMVector3;
 import am2.blocks.liquid.BlockLiquidEssence;
-import am2.blocks.tileentities.*;
+import am2.blocks.tileentities.TileEntityArcaneDeconstructor;
+import am2.blocks.tileentities.TileEntityArcaneReconstructor;
+import am2.blocks.tileentities.TileEntityArmorImbuer;
+import am2.blocks.tileentities.TileEntityAstralBarrier;
+import am2.blocks.tileentities.TileEntityBlackAurem;
+import am2.blocks.tileentities.TileEntityBrokenPowerLink;
+import am2.blocks.tileentities.TileEntityCalefactor;
+import am2.blocks.tileentities.TileEntityCandle;
+import am2.blocks.tileentities.TileEntityCelestialPrism;
+import am2.blocks.tileentities.TileEntityCraftingAltar;
+import am2.blocks.tileentities.TileEntityCrystalMarker;
+import am2.blocks.tileentities.TileEntityCrystalMarkerSpellExport;
+import am2.blocks.tileentities.TileEntityEssenceConduit;
+import am2.blocks.tileentities.TileEntityEssenceRefiner;
+import am2.blocks.tileentities.TileEntityEverstone;
+import am2.blocks.tileentities.TileEntityFlickerHabitat;
+import am2.blocks.tileentities.TileEntityFlickerLure;
+import am2.blocks.tileentities.TileEntityGroundRuneSpell;
+import am2.blocks.tileentities.TileEntityInertSpawner;
+import am2.blocks.tileentities.TileEntityInscriptionTable;
+import am2.blocks.tileentities.TileEntityKeystoneChest;
+import am2.blocks.tileentities.TileEntityKeystoneDoor;
+import am2.blocks.tileentities.TileEntityKeystoneRecepticle;
+import am2.blocks.tileentities.TileEntityLectern;
+import am2.blocks.tileentities.TileEntityMagiciansWorkbench;
+import am2.blocks.tileentities.TileEntityManaBattery;
+import am2.blocks.tileentities.TileEntityObelisk;
+import am2.blocks.tileentities.TileEntityOcculus;
+import am2.blocks.tileentities.TileEntityOtherworldAura;
+import am2.blocks.tileentities.TileEntityParticleEmitter;
+import am2.blocks.tileentities.TileEntitySeerStone;
+import am2.blocks.tileentities.TileEntitySlipstreamGenerator;
+import am2.blocks.tileentities.TileEntitySpellSealedDoor;
+import am2.blocks.tileentities.TileEntitySummoner;
+import am2.items.ItemEssence;
+import am2.items.ItemOre;
 import am2.items.ItemsCommonProxy;
 import am2.items.OreItem;
 import am2.spell.SkillManager;
@@ -14,23 +68,13 @@ import am2.utility.RecipeUtilities;
 import cpw.mods.fml.common.registry.GameData;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.ReflectionHelper;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.*;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
-import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class BlocksCommonProxy{
+	public static BlocksCommonProxy i;
+	{
+		i = this;
+	}
+
 	//--------------------------------------------------------------
 	// Blocks
 	//--------------------------------------------------------------
@@ -104,10 +148,9 @@ public class BlocksCommonProxy{
 
 	private static ArrayList<Block> arsMagicaBlocksList;
 
-	public static HashMap<Integer, ArrayList<AMVector3>> KeystonePortalLocations;
+	public static HashSet<SimpleCoordStore> keystonePortalLocations = new HashSet<SimpleCoordStore>();
 
 	public BlocksCommonProxy(){
-		KeystonePortalLocations = new HashMap<Integer, ArrayList<AMVector3>>();
 		if (blockTab == null)
 			blockTab = new AMCreativeTab("Ars Magica Blocks");
 
@@ -120,67 +163,43 @@ public class BlocksCommonProxy{
 	}
 
 	public void registerKeystonePortal(int x, int y, int z, int dimension){
-		AMVector3 location = new AMVector3(x, y, z);
-		if (!KeystonePortalLocations.containsKey(dimension))
-			KeystonePortalLocations.put(dimension, new ArrayList<AMVector3>());
-
-		ArrayList<AMVector3> dimensionList = KeystonePortalLocations.get(dimension);
-
-		if (!dimensionList.contains(location))
-			dimensionList.add(location);
+		SimpleCoordStore pos = new SimpleCoordStore(dimension,x,y,z);
+		keystonePortalLocations.add(pos);
 	}
 
 	public void removeKeystonePortal(int x, int y, int z, int dimension){
-		AMVector3 location = new AMVector3(x, y, z);
-		if (KeystonePortalLocations.containsKey(dimension)){
-			ArrayList<AMVector3> dimensionList = KeystonePortalLocations.get(dimension);
-
-			if (dimensionList.contains(location))
-				dimensionList.remove(location);
-		}
+		SimpleCoordStore pos = new SimpleCoordStore(dimension,x,y,z);
+		keystonePortalLocations.remove(pos);
 	}
 
-	public AMVector3 getNextKeystonePortalLocation(World world, int x, int y, int z, boolean multidimensional, long key){
-		AMVector3 current = new AMVector3(x, y, z);
-		if (!multidimensional){
-			AMVector3 next = getNextKeystoneLocationInWorld(world, x, y, z, key);
-			if (next == null)
-				next = current;
-			return next;
-		}else{
-			return current;
-		}
-	}
-
-	public AMVector3 getNextKeystoneLocationInWorld(World world, int x, int y, int z, long key){
-		AMVector3 location = new AMVector3(x, y, z);
-		ArrayList<AMVector3> dimensionList = KeystonePortalLocations.get(world.provider.dimensionId);
-		if (dimensionList == null || dimensionList.size() < 1){
-			return null;
-		}
-
-		int index = dimensionList.indexOf(location);
-		index++;
-		if (index >= dimensionList.size()) index = 0;
-		AMVector3 newLocation = dimensionList.get(index);
-
-		while (!newLocation.equals(location)){
-			TileEntity te = world.getTileEntity((int)newLocation.x, (int)newLocation.y, (int)newLocation.z);
-			if (te != null && te instanceof TileEntityKeystoneRecepticle){
-				if (KeystoneUtilities.instance.getKeyFromRunes(((IKeystoneLockable)te).getRunesInKey()) == key){
-					return newLocation;
+	public SimpleCoordStore getNextKeystonePortalLocation(SimpleCoordStore pos, boolean multidimensional, long key)
+	{
+		ArrayList<SimpleCoordStore> destinations = new ArrayList<SimpleCoordStore>();
+		for(SimpleCoordStore kp : keystonePortalLocations)
+		{
+			if((kp == null) || kp.equals(pos)) continue;
+			if(multidimensional || (pos.world == kp.world))
+			{
+				TileEntity te = kp.getTileEntity();
+				if(te instanceof TileEntityKeystoneRecepticle)
+				{
+					TileEntityKeystoneRecepticle tekr = (TileEntityKeystoneRecepticle)te;
+					//if(tekr.canActivate())
+					{
+						long ok = KeystoneUtilities.instance.getKeyFromRunes(tekr.getRunesInKey());
+						if(ok == key)
+							destinations.add(kp);
+					}
 				}
 			}
-			index++;
-			if (index >= dimensionList.size()) index = 0;
-			newLocation = dimensionList.get(index);
 		}
-
-		return location;
+		if(destinations.isEmpty())
+			return pos;
+		return destinations.get(DarkcoreMod.r.nextInt(destinations.size()));
 	}
 
 	public void resetKnownPortalLocations(){
-		KeystonePortalLocations.clear();
+		keystonePortalLocations.clear();
 	}
 
 	public void InstantiateBlocks(){
@@ -352,7 +371,7 @@ public class BlocksCommonProxy{
 				"WWW",
 				Character.valueOf('I'), ItemsCommonProxy.itemFocus,
 				Character.valueOf('G'), "blockGlassColorless",
-				Character.valueOf('R'), new ItemStack(ItemsCommonProxy.essence, 1, ItemsCommonProxy.essence.META_PURE),
+				Character.valueOf('R'), new ItemStack(ItemsCommonProxy.essence, 1, ItemEssence.META_PURE),
 				Character.valueOf('W'), witchwoodPlanks,
 				Character.valueOf('D'), ItemsCommonProxy.deficitCrystal
 		}));
@@ -435,7 +454,7 @@ public class BlocksCommonProxy{
 				"GVG",
 				"GGG",
 				Character.valueOf('G'), "ingotGold",
-				Character.valueOf('V'), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_PURIFIEDVINTEUM)
+				Character.valueOf('V'), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_PURIFIEDVINTEUM)
 		}));
 
 		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(particleEmitter), new Object[]{
@@ -490,7 +509,7 @@ public class BlocksCommonProxy{
 				"WWW",
 				Character.valueOf('W'), witchwoodLog,
 				Character.valueOf('F'), Items.feather,
-				Character.valueOf('A'), new ItemStack(ItemsCommonProxy.essence, 1, ItemsCommonProxy.essence.META_AIR)
+				Character.valueOf('A'), new ItemStack(ItemsCommonProxy.essence, 1, ItemEssence.META_AIR)
 		});
 
 		//Flicker Habitat
@@ -500,7 +519,7 @@ public class BlocksCommonProxy{
 				"IDI",
 				Character.valueOf('I'), "ingotIron",
 				Character.valueOf('D'), "dustVinteum",
-				Character.valueOf('B'), new ItemStack(AMOres, 1, AMOres.META_CHIMERITE_BLOCK)
+				Character.valueOf('B'), new ItemStack(AMOres, 1, BlockAMOre.META_CHIMERITE_BLOCK)
 		}));
 
 		//Import Gem
@@ -588,7 +607,7 @@ public class BlocksCommonProxy{
 				"C C",
 				"RPI",
 				"C C",
-				Character.valueOf('P'), new ItemStack(ItemsCommonProxy.essence, 1, ItemsCommonProxy.essence.META_PURE),
+				Character.valueOf('P'), new ItemStack(ItemsCommonProxy.essence, 1, ItemEssence.META_PURE),
 				Character.valueOf('I'), new ItemStack(crystalMarker, 1, BlockCrystalMarker.META_SET_IMPORT),
 				Character.valueOf('C'), "dyeCyan",
 				Character.valueOf('R'), new ItemStack(crystalMarker, 1, BlockCrystalMarker.META_REGULATE_MULTI)
@@ -621,33 +640,33 @@ public class BlocksCommonProxy{
 		});
 
 		//storage blocks
-		createStorageBlockRecipe(new ItemStack(AMOres, 1, AMOres.META_MOONSTONE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_MOONSTONE));
-		createStorageBlockRecipe(new ItemStack(AMOres, 1, AMOres.META_VINTEUM_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_VINTEUMDUST));
-		createStorageBlockRecipe(new ItemStack(AMOres, 1, AMOres.META_BLUE_TOPAZ_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_BLUETOPAZ));
-		createStorageBlockRecipe(new ItemStack(AMOres, 1, AMOres.META_SUNSTONE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_SUNSTONE));
-		createStorageBlockRecipe(new ItemStack(AMOres, 1, AMOres.META_CHIMERITE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_CHIMERITE));
+		createStorageBlockRecipe(new ItemStack(AMOres, 1, BlockAMOre.META_MOONSTONE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_MOONSTONE));
+		createStorageBlockRecipe(new ItemStack(AMOres, 1, BlockAMOre.META_VINTEUM_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_VINTEUMDUST));
+		createStorageBlockRecipe(new ItemStack(AMOres, 1, BlockAMOre.META_BLUE_TOPAZ_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_BLUETOPAZ));
+		createStorageBlockRecipe(new ItemStack(AMOres, 1, BlockAMOre.META_SUNSTONE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_SUNSTONE));
+		createStorageBlockRecipe(new ItemStack(AMOres, 1, BlockAMOre.META_CHIMERITE_BLOCK), new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_CHIMERITE));
 
 		//furnace recipes
-		GameRegistry.addSmelting(new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_ARCANECOMPOUND), new ItemStack(ItemsCommonProxy.itemOre, 2, ItemsCommonProxy.itemOre.META_ARCANEASH), 0);
+		GameRegistry.addSmelting(new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_ARCANECOMPOUND), new ItemStack(ItemsCommonProxy.itemOre, 2, ItemOre.META_ARCANEASH), 0);
 
-		addMetaSmeltingRecipe(AMOres, AMOres.META_VINTEUM_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_VINTEUMDUST));
+		addMetaSmeltingRecipe(AMOres, BlockAMOre.META_VINTEUM_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_VINTEUMDUST));
 
-		addMetaSmeltingRecipe(AMOres, AMOres.META_SUNSTONE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_SUNSTONE));
-		addMetaSmeltingRecipe(AMOres, AMOres.META_BLUE_TOPAZ_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_BLUETOPAZ));
-		addMetaSmeltingRecipe(AMOres, AMOres.META_CHIMERITE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_CHIMERITE));
-		addMetaSmeltingRecipe(AMOres, AMOres.META_MOONSTONE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemsCommonProxy.itemOre.META_MOONSTONE));
+		addMetaSmeltingRecipe(AMOres, BlockAMOre.META_SUNSTONE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_SUNSTONE));
+		addMetaSmeltingRecipe(AMOres, BlockAMOre.META_BLUE_TOPAZ_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_BLUETOPAZ));
+		addMetaSmeltingRecipe(AMOres, BlockAMOre.META_CHIMERITE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_CHIMERITE));
+		addMetaSmeltingRecipe(AMOres, BlockAMOre.META_MOONSTONE_ORE, new ItemStack(ItemsCommonProxy.itemOre, 1, ItemOre.META_MOONSTONE));
 
-		OreDictionary.registerOre("oreBlueTopaz", new ItemStack(AMOres, 1, AMOres.META_BLUE_TOPAZ_ORE));
-		OreDictionary.registerOre("oreVinteum", new ItemStack(AMOres, 1, AMOres.META_VINTEUM_ORE));
-		OreDictionary.registerOre("oreChimerite", new ItemStack(AMOres, 1, AMOres.META_CHIMERITE_ORE));
-		OreDictionary.registerOre("oreMoonstone", new ItemStack(AMOres, 1, AMOres.META_MOONSTONE_ORE));
-		OreDictionary.registerOre("oreSunstone", new ItemStack(AMOres, 1, AMOres.META_SUNSTONE_ORE));
+		OreDictionary.registerOre("oreBlueTopaz", new ItemStack(AMOres, 1, BlockAMOre.META_BLUE_TOPAZ_ORE));
+		OreDictionary.registerOre("oreVinteum", new ItemStack(AMOres, 1, BlockAMOre.META_VINTEUM_ORE));
+		OreDictionary.registerOre("oreChimerite", new ItemStack(AMOres, 1, BlockAMOre.META_CHIMERITE_ORE));
+		OreDictionary.registerOre("oreMoonstone", new ItemStack(AMOres, 1, BlockAMOre.META_MOONSTONE_ORE));
+		OreDictionary.registerOre("oreSunstone", new ItemStack(AMOres, 1, BlockAMOre.META_SUNSTONE_ORE));
 
-		OreDictionary.registerOre("blockBlueTopaz", new ItemStack(AMOres, 1, AMOres.META_BLUE_TOPAZ_BLOCK));
-		OreDictionary.registerOre("blockVinteum", new ItemStack(AMOres, 1, AMOres.META_VINTEUM_BLOCK));
-		OreDictionary.registerOre("blockChimerite", new ItemStack(AMOres, 1, AMOres.META_CHIMERITE_BLOCK));
-		OreDictionary.registerOre("blockMoonstone", new ItemStack(AMOres, 1, AMOres.META_MOONSTONE_BLOCK));
-		OreDictionary.registerOre("blockSunstone", new ItemStack(AMOres, 1, AMOres.META_SUNSTONE_BLOCK));
+		OreDictionary.registerOre("blockBlueTopaz", new ItemStack(AMOres, 1, BlockAMOre.META_BLUE_TOPAZ_BLOCK));
+		OreDictionary.registerOre("blockVinteum", new ItemStack(AMOres, 1, BlockAMOre.META_VINTEUM_BLOCK));
+		OreDictionary.registerOre("blockChimerite", new ItemStack(AMOres, 1, BlockAMOre.META_CHIMERITE_BLOCK));
+		OreDictionary.registerOre("blockMoonstone", new ItemStack(AMOres, 1, BlockAMOre.META_MOONSTONE_BLOCK));
+		OreDictionary.registerOre("blockSunstone", new ItemStack(AMOres, 1, BlockAMOre.META_SUNSTONE_BLOCK));
 
 		OreDictionary.registerOre("chestWood", new ItemStack(Blocks.chest));
 		OreDictionary.registerOre("craftingTableWood", new ItemStack(Blocks.crafting_table));
@@ -758,8 +777,8 @@ public class BlocksCommonProxy{
 		Item.itemsList[BlocksCommonProxy.crystalMarker.blockID] = (new ItemMultiTextureTile(BlocksCommonProxy.crystalMarker.blockID - 256, BlocksCommonProxy.crystalMarker, BlockCrystalMarker.crystalMarkerTypes)).setUnlocalizedName("arsmagica2:crystalMarker");*/
 		registerMultiTextureBlock(witchwoodSingleSlab, "witchwoodSingleSlab", new ItemSlab(witchwoodSingleSlab, witchwoodSingleSlab, witchwoodDoubleSlab, false));
 		registerMultiTextureBlock(witchwoodDoubleSlab, "witchwoodDoubleSlab", new ItemSlab(witchwoodDoubleSlab, witchwoodSingleSlab, witchwoodDoubleSlab, false));
-		registerMultiTextureBlock(illusionBlock, "illusionBlock", new ItemMultiTexture(illusionBlock, illusionBlock, illusionBlock.illusion_block_types).setUnlocalizedName("arsmagica2:illusionBlock"));
-		registerMultiTextureBlock(crystalMarker, "crystalMarker", new ItemMultiTexture(crystalMarker, crystalMarker, crystalMarker.crystalMarkerTypes).setUnlocalizedName("arsmagica2:crystalMarker"));
+		registerMultiTextureBlock(illusionBlock, "illusionBlock", new ItemMultiTexture(illusionBlock, illusionBlock, IllusionBlock.illusion_block_types).setUnlocalizedName("arsmagica2:illusionBlock"));
+		registerMultiTextureBlock(crystalMarker, "crystalMarker", new ItemMultiTexture(crystalMarker, crystalMarker, BlockCrystalMarker.crystalMarkerTypes).setUnlocalizedName("arsmagica2:crystalMarker"));
 
 		arsMagicaBlocksList.add(illusionBlock);
 		arsMagicaBlocksList.add(crystalMarker);

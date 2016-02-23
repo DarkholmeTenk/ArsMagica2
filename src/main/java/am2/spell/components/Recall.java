@@ -1,21 +1,13 @@
 package am2.spell.components;
 
-import am2.AMCore;
-import am2.RitualShapeHelper;
-import am2.api.ArsMagicaApi;
-import am2.api.blocks.MultiblockStructureDefinition;
-import am2.api.math.AMVector3;
-import am2.api.spell.component.interfaces.IRitualInteraction;
-import am2.api.spell.component.interfaces.ISpellComponent;
-import am2.api.spell.enums.Affinity;
-import am2.buffs.BuffList;
-import am2.items.ItemsCommonProxy;
-import am2.particles.AMParticle;
-import am2.particles.ParticleExpandingCollapsingRingAtPoint;
-import am2.playerextensions.ExtendedProperties;
-import am2.utility.DimensionUtilities;
-import am2.utility.EntityUtilities;
-import am2.utility.KeystoneUtilities;
+import io.darkcraft.darkcore.mod.datastore.SimpleCoordStore;
+import io.darkcraft.darkcore.mod.datastore.SimpleDoubleCoordStore;
+import io.darkcraft.darkcore.mod.helpers.TeleportHelper;
+
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Random;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,10 +16,23 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Random;
+import am2.AMCore;
+import am2.RitualShapeHelper;
+import am2.api.ArsMagicaApi;
+import am2.api.blocks.MultiblockStructureDefinition;
+import am2.api.spell.component.interfaces.IRitualInteraction;
+import am2.api.spell.component.interfaces.ISpellComponent;
+import am2.api.spell.enums.Affinity;
+import am2.buffs.BuffList;
+import am2.items.ItemOre;
+import am2.items.ItemRune;
+import am2.items.ItemsCommonProxy;
+import am2.particles.AMParticle;
+import am2.particles.ParticleExpandingCollapsingRingAtPoint;
+import am2.playerextensions.ExtendedProperties;
+import am2.utility.DimensionUtilities;
+import am2.utility.EntityUtilities;
+import am2.utility.KeystoneUtilities;
 
 public class Recall implements ISpellComponent, IRitualInteraction{
 
@@ -64,11 +69,11 @@ public class Recall implements ISpellComponent, IRitualInteraction{
 
 		ExtendedProperties casterProperties = ExtendedProperties.For(caster);
 		if (!casterProperties.getMarkSet()){
-			if (caster instanceof EntityPlayer && !world.isRemote)
+			if ((caster instanceof EntityPlayer) && !world.isRemote)
 				((EntityPlayer)caster).addChatMessage(new ChatComponentText(StatCollector.translateToLocal("am2.tooltip.noMark")));
 			return false;
 		}else if (casterProperties.getMarkDimension() != caster.dimension){
-			if (caster instanceof EntityPlayer && !world.isRemote)
+			if ((caster instanceof EntityPlayer) && !world.isRemote)
 				((EntityPlayer)caster).addChatMessage(new ChatComponentText(StatCollector.translateToLocal("am2.tooltip.diffDimMark")));
 			return false;
 		}
@@ -82,29 +87,32 @@ public class Recall implements ISpellComponent, IRitualInteraction{
 
 		boolean hasVinteumDust = false;
 		for (ItemStack stack : ritualRunes){
-			if (stack.getItem() == ItemsCommonProxy.itemOre && stack.getItemDamage() == ItemsCommonProxy.itemOre.META_VINTEUMDUST){
+			if ((stack.getItem() == ItemsCommonProxy.itemOre) && (stack.getItemDamage() == ItemOre.META_VINTEUMDUST)){
 				hasVinteumDust = true;
 				break;
 			}
 		}
 
-		if (!hasVinteumDust && ritualRunes.length == 3){
+		if (!hasVinteumDust && (ritualRunes.length == 3)){
 			long key = KeystoneUtilities.instance.getKeyFromRunes(ritualRunes);
-			AMVector3 vector = AMCore.proxy.blocks.getNextKeystonePortalLocation(world, x, y, z, false, key);
-			if (vector == null || vector.equals(new AMVector3(x, y, z))){
-				if (caster instanceof EntityPlayer && !world.isRemote)
+			SimpleCoordStore me = new SimpleCoordStore(world, x, y, z);
+			SimpleCoordStore vector = AMCore.proxy.blocks.getNextKeystonePortalLocation(me, true, key);
+			//AMVector3 vector = AMCore.proxy.blocks.getNextKeystonePortalLocation(world, x, y, z, false, key);
+			if ((vector == null) || vector.equals(me)){
+				if ((caster instanceof EntityPlayer) && !world.isRemote)
 					((EntityPlayer)caster).addChatMessage(new ChatComponentText(StatCollector.translateToLocal("am2.tooltip.noMatchingGate")));
 				return false;
 			}else{
 				RitualShapeHelper.instance.consumeRitualReagents(this, world, x, y, z);
 				RitualShapeHelper.instance.consumeRitualShape(this, world, x, y, z);
-				((EntityLivingBase)target).setPositionAndUpdate(vector.x, vector.y - target.height, vector.z);
+				TeleportHelper.teleportEntity(target, new SimpleDoubleCoordStore(vector.world,vector.x+0.5,vector.y-target.height, vector.z+0.5));
+				//((EntityLivingBase)target).setPositionAndUpdate(vector.x, vector.y - target.height, vector.z);
 				return true;
 			}
 		}else if (hasVinteumDust){
 			ArrayList<ItemStack> copy = new ArrayList<ItemStack>();
 			for (ItemStack stack : ritualRunes){
-				if (stack.getItem() == ItemsCommonProxy.rune && stack.getItemDamage() <= 16){
+				if ((stack.getItem() == ItemsCommonProxy.rune) && (stack.getItemDamage() <= 16)){
 					copy.add(stack);
 				}
 			}
@@ -112,11 +120,11 @@ public class Recall implements ISpellComponent, IRitualInteraction{
 			long key = KeystoneUtilities.instance.getKeyFromRunes(newRunes);
 			EntityPlayer player = EntityUtilities.getPlayerForCombo(world, (int)key);
 			if (player == null){
-				if (caster instanceof EntityPlayer && !world.isRemote)
+				if ((caster instanceof EntityPlayer) && !world.isRemote)
 					((EntityPlayer)caster).addChatMessage(new ChatComponentText("am2.tooltip.noMatchingPlayer"));
 				return false;
 			}else if (player == caster){
-				if (caster instanceof EntityPlayer && !world.isRemote)
+				if ((caster instanceof EntityPlayer) && !world.isRemote)
 					((EntityPlayer)caster).addChatMessage(new ChatComponentText("am2.tooltip.cantSummonSelf"));
 				return false;
 			}else{
@@ -175,7 +183,7 @@ public class Recall implements ISpellComponent, IRitualInteraction{
 	@Override
 	public Object[] getRecipeItems(){
 		return new Object[]{
-				new ItemStack(ItemsCommonProxy.rune, 1, ItemsCommonProxy.rune.META_ORANGE),
+				new ItemStack(ItemsCommonProxy.rune, 1, ItemRune.META_ORANGE),
 				Items.compass,
 				new ItemStack(Items.map, 1, Short.MAX_VALUE),
 				Items.ender_pearl

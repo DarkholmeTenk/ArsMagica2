@@ -243,7 +243,7 @@ public class AMConfig extends Configuration{
 	public static float affinityMult = 0.5f;
 
 	public static boolean inlayDrop = true;
-
+	public static int dimTravelCost = 10000;
 
 	public static final String DEFAULT_LANGUAGE = "en_US";
 
@@ -395,6 +395,7 @@ public class AMConfig extends Configuration{
 		inlayDrop = get(dCat, "Inlays drop on block break", "true", "Whether inlays drop if the block beneath is broken").getBoolean(true);
 		augmentedMult = get(dCat, "Augmented multiplier", "1.5", "The multiplier augmented casting applies to things").getDouble(1.5);
 		affinityMult = (float) get(dCat, "Affinity multiplier", "0.5","").getDouble(0.5);
+		dimTravelCost = get(dCat, "Dimensional travel cost", "10000","").getInt(10000);
 
 		initDirectProperties();
 

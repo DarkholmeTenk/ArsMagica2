@@ -1,15 +1,11 @@
 package am2.blocks.tileentities;
 
-import am2.AMChunkLoader;
-import am2.AMCore;
-import am2.api.blocks.IKeystoneLockable;
-import am2.api.blocks.MultiblockStructureDefinition;
-import am2.api.math.AMVector3;
-import am2.api.power.PowerTypes;
-import am2.blocks.BlocksCommonProxy;
-import am2.buffs.BuffList;
-import am2.multiblock.IMultiblockStructureController;
-import am2.power.PowerNodeRegistry;
+import io.darkcraft.darkcore.mod.datastore.SimpleCoordStore;
+import io.darkcraft.darkcore.mod.datastore.SimpleDoubleCoordStore;
+import io.darkcraft.darkcore.mod.helpers.TeleportHelper;
+
+import java.util.ArrayList;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.effect.EntityLightningBolt;
@@ -25,12 +21,19 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
-
-import java.util.ArrayList;
-import java.util.Random;
+import am2.AMChunkLoader;
+import am2.AMCore;
+import am2.api.blocks.IKeystoneLockable;
+import am2.api.blocks.MultiblockStructureDefinition;
+import am2.api.math.AMVector3;
+import am2.api.power.PowerTypes;
+import am2.blocks.BlocksCommonProxy;
+import am2.buffs.BuffList;
+import am2.configuration.AMConfig;
+import am2.multiblock.IMultiblockStructureController;
+import am2.power.PowerNodeRegistry;
 
 public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements IInventory, IMultiblockStructureController, IKeystoneLockable{
 
@@ -48,7 +51,7 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 
 	public TileEntityKeystoneRecepticle(){
 		super(250000);
-		this.isActive = false;
+		isActive = false;
 		inventory = new ItemStack[getSizeInventory()];
 		initMultiblock();
 	}
@@ -117,23 +120,23 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 
 	public void onPlaced(){
 		if (!worldObj.isRemote){
-			AMChunkLoader.INSTANCE.requestStaticChunkLoad(this.getClass(), this.xCoord, this.yCoord, this.zCoord, this.worldObj);
+			AMChunkLoader.INSTANCE.requestStaticChunkLoad(this.getClass(), xCoord, yCoord, zCoord, worldObj);
 		}
 	}
 
 	@Override
 	public void invalidate(){
-		AMCore.instance.proxy.blocks.removeKeystonePortal(xCoord, yCoord, zCoord, worldObj.provider.dimensionId);
+		AMCore.proxy.blocks.removeKeystonePortal(xCoord, yCoord, zCoord, worldObj.provider.dimensionId);
 
 		if (!worldObj.isRemote){
-			AMChunkLoader.INSTANCE.releaseStaticChunkLoad(this.getClass(), this.xCoord, this.yCoord, this.zCoord, this.worldObj);
+			AMChunkLoader.INSTANCE.releaseStaticChunkLoad(this.getClass(), xCoord, yCoord, zCoord, worldObj);
 		}
 
 		super.invalidate();
 	}
 
 	public void setActive(long key){
-		this.isActive = true;
+		isActive = true;
 		this.key = key;
 		int myMeta = worldObj.getBlockMetadata(xCoord, yCoord, zCoord);
 
@@ -143,9 +146,9 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 			myMeta |= 4;
 		}
 
-		if (!this.worldObj.isRemote){
-			for (Object player : this.worldObj.playerEntities){
-				if (player instanceof EntityPlayerMP && new AMVector3((EntityPlayerMP)player).distanceSqTo(new AMVector3(this)) <= 4096){
+		if (!worldObj.isRemote){
+			for (Object player : worldObj.playerEntities){
+				if ((player instanceof EntityPlayerMP) && (new AMVector3((EntityPlayerMP)player).distanceSqTo(new AMVector3(this)) <= 4096)){
 					((EntityPlayerMP)player).playerNetServerHandler.sendPacket(getDescriptionPacket());
 				}
 			}
@@ -155,7 +158,7 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 	}
 
 	public boolean isActive(){
-		return this.isActive;
+		return isActive;
 	}
 
 	@Override
@@ -165,7 +168,7 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 		AxisAlignedBB bb = AxisAlignedBB.getBoundingBox(xCoord + 0.3, yCoord - 3, zCoord + 0.3, xCoord + 0.7, yCoord, zCoord + 0.7);
 		ArrayList<Entity> entities = (ArrayList<Entity>)worldObj.getEntitiesWithinAABB(EntityLivingBase.class, bb);
 
-		if (this.isActive){
+		if (isActive){
 			surroundingCheckTicks--;
 			if (surroundingCheckTicks <= 0){
 				surroundingCheckTicks = 20;
@@ -175,14 +178,14 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 				doTeleport(entities.get(0));
 			}
 		}else{
-			if (entities.size() == 1 && worldObj.canBlockSeeTheSky(xCoord, yCoord, zCoord)){
+			if ((entities.size() == 1) && worldObj.canBlockSeeTheSky(xCoord, yCoord, zCoord)){
 				Entity entity = entities.get(0);
 				if (entity instanceof EntityPlayer){
 					EntityPlayer player = (EntityPlayer)entity;
 					if (player.isPotionActive(BuffList.haste) && player.isPotionActive(Potion.moveSpeed.id) && player.isSprinting()){
 						//if (worldObj.isRemote)
 						//player.addStat(AMCore.achievements.EightyEightMilesPerHour, 1);
-						this.key = 0;
+						key = 0;
 						if (!worldObj.isRemote){
 							EntityLightningBolt elb = new EntityLightningBolt(worldObj, xCoord, yCoord, zCoord);
 							worldObj.spawnEntityInWorld(elb);
@@ -201,8 +204,8 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 		allGood &= worldObj.isAirBlock(xCoord, yCoord - 2, zCoord);
 		allGood &= worldObj.isAirBlock(xCoord, yCoord - 3, zCoord);
 		allGood &= checkStructure();
-		allGood &= PowerNodeRegistry.For(this.worldObj).checkPower(this);
-		allGood &= !this.isActive;
+		allGood &= PowerNodeRegistry.For(worldObj).checkPower(this);
+		allGood &= !isActive;
 		return allGood;
 	}
 
@@ -230,8 +233,8 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 	}
 
 	public void deactivate(){
-		this.isActive = false;
-		if (!this.worldObj.isRemote){
+		isActive = false;
+		if (!worldObj.isRemote){
 			worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
 		}
 	}
@@ -239,44 +242,40 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 	private void doTeleport(Entity entity){
 		deactivate();
 
-		AMVector3 newLocation = AMCore.instance.proxy.blocks.getNextKeystonePortalLocation(this.worldObj, xCoord, yCoord, zCoord, false, this.key);
-		AMVector3 myLocation = new AMVector3(xCoord, yCoord, zCoord);
+		SimpleCoordStore myLocation = new SimpleCoordStore(this);
+		SimpleCoordStore newLocation = BlocksCommonProxy.i.getNextKeystonePortalLocation(new SimpleCoordStore(this), true, key);
 
-		double distance = myLocation.distanceTo(newLocation);
+		//AMVector3 newLocation = AMCore.instance.proxy.blocks.getNextKeystonePortalLocation(this.worldObj, xCoord, yCoord, zCoord, false, this.key);
+		//AMVector3 myLocation = new AMVector3(xCoord, yCoord, zCoord);
+
+		double distance = myLocation.distance(newLocation);
 		float essenceCost = (float)(Math.pow(distance, 2) * 0.00175f);
+		boolean dt = myLocation.world != newLocation.world;
+		if(dt)
+			essenceCost += AMConfig.dimTravelCost;
+		int meta = newLocation.getMetadata();
 
-		int meta = worldObj.getBlockMetadata((int)newLocation.x, (int)newLocation.y, (int)newLocation.z);
-
+		float charge = PowerNodeRegistry.For(worldObj).getHighestPower(this);
 		if (AMCore.config.getHazardousGateways()){
 			//uh-oh!  Not enough power!  The teleporter will still send you though, but I wonder where...
-			float charge = PowerNodeRegistry.For(this.worldObj).getHighestPower(this);
-			if (charge < essenceCost){
-				essenceCost = charge;
-				//get the distance that our charge *will* take us towards the next point
-				double distanceWeCanGo = MathHelper.sqrt_double(charge / 0.00175);
-				//get the angle between the 2 vectors
-				double deltaZ = newLocation.z - myLocation.z;
-				double deltaX = newLocation.x - myLocation.x;
-				double angleH = Math.atan2(deltaZ, deltaX);
-				//interpolate the distance at that angle - this is the new position
-				double newX = myLocation.x + (Math.cos(angleH) * distanceWeCanGo);
-				double newZ = myLocation.z + (Math.sin(angleH) * distanceWeCanGo);
-				double newY = myLocation.y;
-
-				while (worldObj.isAirBlock((int)newX, (int)newY, (int)newZ)){
-					newY++;
-				}
-
-				newLocation = new AMVector3(newX, newY, newZ);
+			if(dt && (charge < AMConfig.dimTravelCost))
+			{
+				worldObj.playSoundEffect(newLocation.x, newLocation.y, newLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
+				return;
 			}
-		}else{
-			this.worldObj.playSoundEffect(newLocation.x, newLocation.y, newLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
+			else if (charge < essenceCost){
+				double distanceWeCanGo = dt ? ((charge-AMConfig.dimTravelCost)/(essenceCost-AMConfig.dimTravelCost)):(charge/essenceCost);
+				newLocation = myLocation.travelTo(newLocation, distanceWeCanGo, true).round();
+				essenceCost = charge;
+			}
+		}else if(charge < essenceCost){
+			worldObj.playSoundEffect(newLocation.x, newLocation.y, newLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
 			return;
 		}
 
 
-		float newRotation = 0;
-		switch (meta){
+		float newRotation = 270 - (90 * meta);
+		/*switch (meta){
 		case 0:
 			newRotation = 270;
 			break;
@@ -289,13 +288,16 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 		case 3:
 			newRotation = 0;
 			break;
-		}
-		entity.setPositionAndRotation(newLocation.x + 0.5, newLocation.y - entity.height, newLocation.z + 0.5, newRotation, entity.rotationPitch);
+		}*/
+		SimpleDoubleCoordStore dest = new SimpleDoubleCoordStore(newLocation.world,newLocation.x+0.5,newLocation.y-entity.height,newLocation.z+0.5);
+		TeleportHelper.teleportEntity(entity, dest, newRotation);
+		//entity.setPositionAndRotation(newLocation.x + 0.5, newLocation.y - entity.height, newLocation.z + 0.5, newRotation, entity.rotationPitch);
 
-		PowerNodeRegistry.For(this.worldObj).consumePower(this, PowerNodeRegistry.For(this.worldObj).getHighestPowerType(this), essenceCost);
-
-		this.worldObj.playSoundEffect(myLocation.x, myLocation.y, myLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
-		this.worldObj.playSoundEffect(newLocation.x, newLocation.y, newLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
+		PowerNodeRegistry.For(worldObj).consumePower(this, PowerNodeRegistry.For(worldObj).getHighestPowerType(this), essenceCost);
+		World a = myLocation.getWorldObj();
+		World b = newLocation.getWorldObj();
+		a.playSoundEffect(myLocation.x, myLocation.y, myLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
+		b.playSoundEffect(newLocation.x, newLocation.y, newLocation.z, "mob.endermen.portal", 1.0F, 1.0F);
 	}
 
 	@Override
@@ -361,7 +363,7 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 	@Override
 	public void setInventorySlotContents(int i, ItemStack itemstack){
 		inventory[i] = itemstack;
-		if (itemstack != null && itemstack.stackSize > getInventoryStackLimit()){
+		if ((itemstack != null) && (itemstack.stackSize > getInventoryStackLimit())){
 			itemstack.stackSize = getInventoryStackLimit();
 		}
 	}
@@ -399,15 +401,15 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 		inventory = new ItemStack[getSizeInventory()];
 		for (int i = 0; i < nbttaglist.tagCount(); i++){
 			String tag = String.format("ArrayIndex", i);
-			NBTTagCompound nbttagcompound1 = (NBTTagCompound)nbttaglist.getCompoundTagAt(i);
+			NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
 			byte byte0 = nbttagcompound1.getByte(tag);
-			if (byte0 >= 0 && byte0 < inventory.length){
+			if ((byte0 >= 0) && (byte0 < inventory.length)){
 				inventory[byte0] = ItemStack.loadItemStackFromNBT(nbttagcompound1);
 			}
 		}
-		AMCore.instance.proxy.blocks.registerKeystonePortal(xCoord, yCoord, zCoord, nbttagcompound.getInteger("keystone_receptacle_dimension_id"));
+		AMCore.proxy.blocks.registerKeystonePortal(xCoord, yCoord, zCoord, nbttagcompound.getInteger("keystone_receptacle_dimension_id"));
 
-		this.isActive = nbttagcompound.getBoolean("isActive");
+		isActive = nbttagcompound.getBoolean("isActive");
 	}
 
 	@Override
@@ -426,7 +428,7 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 
 		nbttagcompound.setInteger("keystone_receptacle_dimension_id", worldObj.provider.dimensionId);
 		nbttagcompound.setTag("KeystoneRecepticleInventory", nbttaglist);
-		nbttagcompound.setBoolean("isActive", this.isActive);
+		nbttagcompound.setBoolean("isActive", isActive);
 	}
 
 	@Override
@@ -437,14 +439,14 @@ public class TileEntityKeystoneRecepticle extends TileEntityAMPower implements I
 	@Override
 	public Packet getDescriptionPacket(){
 		NBTTagCompound compound = new NBTTagCompound();
-		this.writeToNBT(compound);
+		writeToNBT(compound);
 		S35PacketUpdateTileEntity packet = new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, worldObj.getBlockMetadata(xCoord, yCoord, zCoord), compound);
 		return packet;
 	}
 
 	@Override
 	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt){
-		this.readFromNBT(pkt.func_148857_g());
+		readFromNBT(pkt.func_148857_g());
 	}
 
 	@Override
