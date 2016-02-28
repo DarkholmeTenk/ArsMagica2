@@ -459,7 +459,10 @@ public class ExtendedProperties implements IExtendedProperties, IExtendedEntityP
 		if (level > maxMagicLevel) level = maxMagicLevel;
 		if (level < 0) level = 0;
 		setMagicLevel(level);
-		setMaxMana((float)((Math.pow(level, 1.5f) * (85f * ((float)level / maxMagicLevel))) + 500f));
+		if(level < 20)
+			setMaxMana(AMConfig.manaMult * (float)(((Math.pow(level, 1.5f) * level) / maxMagicLevel) + 5.882f));
+		else
+			setMaxMana(AMConfig.manaMult * (float)(((Math.pow(level, 1.8f) * level) / maxMagicLevel) - 27.059f));
 		setCurrentMana(getMaxMana());
 		setCurrentFatigue(0);
 		setMaxFatigue((level * 10) + 1);
