@@ -245,6 +245,7 @@ public class AMConfig extends Configuration{
 	public static boolean inlayDrop = true;
 	public static int dimTravelCost = 10000;
 	public static int manaMult = 85;
+	public static int etheriumRefill = 0;
 
 	public static final String DEFAULT_LANGUAGE = "en_US";
 
@@ -398,6 +399,7 @@ public class AMConfig extends Configuration{
 		affinityMult = (float) get(dCat, "Affinity multiplier", "0.5","").getDouble(0.5);
 		dimTravelCost = get(dCat, "Dimensional travel cost", "10000","").getInt(10000);
 		manaMult = get(dCat,"Mana multiplier","85","").getInt(85);
+		etheriumRefill = get(dCat,"Etherium refill","0","").getInt(0);
 
 		initDirectProperties();
 
