@@ -2,6 +2,7 @@ package am2.blocks.tileentities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class TileEntityBlackAurem extends TileEntityObelisk implements IMultiblo
 	private static final int GROUP_CHIMERITE = 0;
 	private static final int GROUP_OBSIDIAN = 1;
 	private static final int GROUP_SUNSTONE = 2;
-	private final ArrayList<EntityLivingBase> cachedEntities;
+	private final HashSet<EntityLivingBase> cachedEntities;
 	private int ticksSinceLastEntityScan = 0;
 	private float rotation = 0.0f;
 	private float rotationIncrement = 0.15f;
@@ -51,7 +52,7 @@ public class TileEntityBlackAurem extends TileEntityObelisk implements IMultiblo
 
 		arcs = new HashMap();
 
-		cachedEntities = new ArrayList<EntityLivingBase>();
+		cachedEntities = new HashSet<EntityLivingBase>();
 
 		structure = new MultiblockStructureDefinition("blackaurem_structure");
 
@@ -143,7 +144,7 @@ public class TileEntityBlackAurem extends TileEntityObelisk implements IMultiblo
 
 			EntityLivingBase ent = it.next();
 
-			if (ent.isDead){
+			if (ent.isDead || (ent.getHealth() <= 0) || (worldObj.getEntityByID(ent.getEntityId()) == null)){
 				it.remove();
 				continue;
 			}
